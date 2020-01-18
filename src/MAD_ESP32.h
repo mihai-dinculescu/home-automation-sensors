@@ -6,14 +6,22 @@
 
     #include <WiFi.h>
 
+    #include "config.h"
+
+    #ifdef CAPABILITIES_SD
+        #include "logging.h"
+    #endif
+
     #define LOG(fmt, ...) (Serial.printf(fmt, ##__VA_ARGS__))
     #define LOGLN(fmt, ...) (Serial.printf("%09llu: " fmt "\n", GetTimestamp(), ##__VA_ARGS__))
 
     struct Pins {
+        const uint16_t LED_ERROR;
         const uint16_t A0;
+        const uint16_t A1;
+        const uint16_t P21;
         const uint16_t I2C_SDA;
         const uint16_t I2C_SCL;
-        const uint16_t LED_ERROR;
     };
 
     extern const Pins pins;

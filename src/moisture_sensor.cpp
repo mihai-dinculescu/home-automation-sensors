@@ -9,7 +9,7 @@
 
     void SetupMoistureSensor()
     {
-        if (!seesaw_soil.begin(seesaw_soil_addr)) {
+        if (!seesaw_soil.begin(seesaw_soil_i2c_addr)) {
             LOGLN("Failed to init Seesaw soil!");
             FatalError();
         }
@@ -49,7 +49,7 @@
 
     void SetPlantMoistureLed(uint16_t plant_moisture)
     {
-        uint16_t plant_moisture_threshold = 2000;
+        uint16_t plant_moisture_threshold = 0;
         ReadConfig(&plant_moisture_threshold);
         LOGLN("Plant moisture threshold %d", plant_moisture_threshold);
 

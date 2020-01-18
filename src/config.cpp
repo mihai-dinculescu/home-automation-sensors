@@ -16,12 +16,16 @@ const char*          mqtt_broker             = "192.168.1.100";
     const char*      mqtt_topic              = "sensors/bedroom_master";
 #endif
 
+#ifdef CAPABILITIES_SD
+    const uint16_t   sd_chip_select          = pins.P21;
+#endif
+
 #ifdef CAPABILITIES_DISPLAY
     const uint8_t    ssd1306_i2c_addr        = 0x3C;
 #endif
 
 #ifdef CAPABILITIES_MOISTURE_SENSOR
-    const uint8_t    seesaw_soil_addr        = 0x36;
+    const uint8_t    seesaw_soil_i2c_addr    = 0x36;
     const uint8_t    moisture_warning_pin    = pins.A0;
     const char*      config_url              = config_secrets.config_url;
 #endif

@@ -82,6 +82,28 @@ void SetupBsec()
         }
     } else {
         LOGLN("Saved state missing!");
+
+        #ifdef CAPABILITIES_SD
+            if (DataRead(BSEC_MAX_STATE_BLOB_SIZE, sensor_state)) {
+                #ifdef BSEC_DUNP_STATE
+                    DumpState("retrieveStateSD", sensor_state);
+                #endif
+                sensor.setState(sensor_state);
+
+                if (!CheckSensor()) {
+                    #ifdef CAPABILITIES_SD
+                        DataDelete();
+                        LogRestart("Invalid BSEC data. Deleted.");
+                    #endif
+
+                    DeepSleep(10);
+                } else {
+                    LOGLN("Successfully set state from file.");
+                }
+            } else {
+                    LOGLN("Saved state SD missing!");
+            }
+        #endif
     }
 
     bsec_virtual_sensor_t sensor_list[] = {
@@ -109,6 +131,10 @@ void SetupBsec()
 void setup()
 {
     Serial.begin(115200);
+
+    #ifdef CAPABILITIES_SD
+        SetupSD();
+    #endif
 
     SetupWifi(wifi_ssid, wifi_password);
     SetupTime();
@@ -151,6 +177,12 @@ void loop()
             DumpState("saveState", sensor_state);
         #endif
         LOGLN("Saved state to RTC memory at %lld", sensor_state_time);
+
+        #ifdef CAPABILITIES_SD
+            DataWrite(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
+            LOGLN("Saved state to file.");
+        #endif
+
         CheckSensor();
 
         LogData(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
@@ -159,6 +191,6 @@ void loop()
             DisplayData(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
         #endif
 
-        DeepSleep(3 * 60);
+        DeepSleep(5 * 60);
     }
 }

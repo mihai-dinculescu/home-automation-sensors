@@ -20,6 +20,7 @@
     #if SENSOR_LOCATION == 0
         #define CAPABILITIES_DISPLAY
     #elif SENSOR_LOCATION == 1
+        #define CAPABILITIES_SD
         #define CAPABILITIES_MOISTURE_SENSOR
     #endif
 
@@ -28,9 +29,13 @@
     #endif
 
     #ifdef CAPABILITIES_MOISTURE_SENSOR
-        extern const uint8_t    seesaw_soil_addr;
+        extern const uint8_t    seesaw_soil_i2c_addr;
         extern const uint8_t    moisture_warning_pin;
 
         extern const char*      config_url;
+    #endif
+
+    #ifdef CAPABILITIES_SD
+        extern const uint16_t   sd_chip_select;
     #endif
 #endif

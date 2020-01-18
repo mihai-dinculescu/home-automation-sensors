@@ -30,9 +30,13 @@ void LogData(float temperature, float humidity, float pressure, float iaq_estima
     uint64_t time_ms = millis();
     while (!mqtt_client.connect(mqtt_client_id)) {
         if (millis() >= time_ms + 10 * 1000) {
-            LOGLN(" RESTARTING.");
+            #ifdef CAPABILITIES_SD
+                LogRestart("MQTT connect timeout.");
+            #endif
+
+            LOGLN("RESTARTING.");
             Serial.flush();
-            ESP.restart();
+            DeepSleep(10);
         }
         LOG(".");
         delay(500);
@@ -41,15 +45,5 @@ void LogData(float temperature, float humidity, float pressure, float iaq_estima
 
     LOG("Publishing to MQTT.");
     mqtt_client.publish(mqtt_topic, messageStream.str().c_str(), false, 2);
-    // time_ms = millis();
-    // while (!mqtt_client.publish(mqtt_topic, messageStream.str().c_str(), false, 2)) {
-    //     if (millis() >= time_ms + 10 * 1000) {
-    //         LOGLN(" RESTARTING.");
-    //         Serial.flush();
-    //         ESP.restart();
-    //     }
-    //     LOG(".");
-    //     delay(500);
-    // }
     LOG(" PUBLISHED with status %d.\n", mqtt_client.lastError());
 }
