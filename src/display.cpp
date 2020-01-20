@@ -8,7 +8,7 @@
 
     void SetupDisplay()
     {
-        display.begin(SSD1306_SWITCHCAPVCC, ssd1306_i2c_addr);
+        display.begin(SSD1306_SWITCHCAPVCC, config.ssd1306_i2c_addr);
         display.setTextSize(1);
         display.setTextColor(WHITE);
         LOGLN("LCD init done.");

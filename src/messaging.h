@@ -1,13 +1,7 @@
 #ifndef MESSAGING_H
     #define MESSAGING_H
-    #include <sstream>
-    #include <iostream>
-    #include <string>
 
     #include <MQTT.h>
-
-    #include "config.h"
-    #include "MAD_ESP32.h"
 
     extern MQTTClient mqtt_client;
 

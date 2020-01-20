@@ -1,6 +1,8 @@
 #include "config.h"
 
 #ifdef CAPABILITIES_MOISTURE_SENSOR
+    #include <ArduinoJson.h>
+
     #include "moisture_sensor.h"
     #include "MAD_ESP32.h"
 
@@ -9,9 +11,9 @@
 
     void SetupMoistureSensor()
     {
-        if (!seesaw_soil.begin(seesaw_soil_i2c_addr)) {
+        if (!seesaw_soil.begin(config.seesaw_soil_i2c_addr)) {
             LOGLN("Failed to init Seesaw soil!");
-            FatalError();
+            board.FatalError();
         }
         LOGLN("Seesaw Soil init done.");
     }
@@ -21,11 +23,11 @@
         return seesaw_soil.touchRead(0);
     }
 
-    void ReadConfig(uint16_t* out_moisture_threshold)
+    void ReadConfig(uint16_t *out_moisture_threshold)
     {
         HTTPClient http_client;
 
-        http_client.begin(config_url);
+        http_client.begin(config.config_url);
 
         int response_code = http_client.GET();
 
@@ -53,14 +55,14 @@
         ReadConfig(&plant_moisture_threshold);
         LOGLN("Plant moisture threshold %d", plant_moisture_threshold);
 
-        pinMode(moisture_warning_pin, OUTPUT);
+        pinMode(*config.moisture_warning_pin, OUTPUT);
         if (plant_moisture <= plant_moisture_threshold) {
-            digitalWrite(moisture_warning_pin, HIGH);
-            gpio_hold_en((gpio_num_t)moisture_warning_pin);
+            digitalWrite(*config.moisture_warning_pin, HIGH);
+            gpio_hold_en((gpio_num_t)*config.moisture_warning_pin);
             gpio_deep_sleep_hold_en();
         } else {
-            digitalWrite(moisture_warning_pin, LOW);
-            gpio_hold_dis((gpio_num_t)moisture_warning_pin);
+            digitalWrite(*config.moisture_warning_pin, LOW);
+            gpio_hold_dis((gpio_num_t)*config.moisture_warning_pin);
             gpio_deep_sleep_hold_dis();
         }
     }

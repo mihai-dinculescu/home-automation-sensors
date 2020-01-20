@@ -1,10 +1,17 @@
+#include <sstream>
+#include <iostream>
+#include <string>
+
+#include "config.h"
+#include "MAD_ESP32.h"
+#include "logging.h"
 #include "messaging.h"
 
 MQTTClient mqtt_client(256);
 
 void SetupMQTT()
 {
-    mqtt_client.begin(mqtt_broker, wifi_client);
+    mqtt_client.begin(config.mqtt_broker, board.wifi_client);
     LOGLN("MQTT init done.");
 }
 
@@ -13,7 +20,7 @@ void LogData(float temperature, float humidity, float pressure, float iaq_estima
     std::ostringstream messageStream;
 
     messageStream << "{";
-    messageStream << "\"location\":\"" << mqtt_location << "\"";
+    messageStream << "\"location\":\"" << config.mqtt_location << "\"";
     messageStream << ",\"temperature\":" << temperature;
     messageStream << ",\"humidity\":" << humidity;
     messageStream << ",\"pressure\":" << pressure / 100; // hPa
@@ -28,7 +35,7 @@ void LogData(float temperature, float humidity, float pressure, float iaq_estima
 
     LOG("Connecting to MQTT.");
     uint64_t time_ms = millis();
-    while (!mqtt_client.connect(mqtt_client_id)) {
+    while (!mqtt_client.connect(config.mqtt_client_id)) {
         if (millis() >= time_ms + 10 * 1000) {
             #ifdef CAPABILITIES_SD
                 LogRestart("MQTT connect timeout.");
@@ -36,7 +43,7 @@ void LogData(float temperature, float humidity, float pressure, float iaq_estima
 
             LOGLN("RESTARTING.");
             Serial.flush();
-            DeepSleep(10);
+            board.DeepSleep(10);
         }
         LOG(".");
         delay(500);
@@ -44,6 +51,6 @@ void LogData(float temperature, float humidity, float pressure, float iaq_estima
     LOG(" CONNECTED.\n");
 
     LOG("Publishing to MQTT.");
-    mqtt_client.publish(mqtt_topic, messageStream.str().c_str(), false, 2);
+    mqtt_client.publish(config.mqtt_topic, messageStream.str().c_str(), false, 2);
     LOG(" PUBLISHED with status %d.\n", mqtt_client.lastError());
 }

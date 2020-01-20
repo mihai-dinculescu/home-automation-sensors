@@ -6,6 +6,10 @@
 
 #include "messaging.h"
 
+#ifdef CAPABILITIES_SD
+    #include "logging.h"
+#endif
+
 #ifdef CAPABILITIES_DISPLAY
     #include "display.h"
 #endif
@@ -38,7 +42,7 @@ bool CheckSensor() {
 }
 
 #ifdef BSEC_DUNP_STATE
-void DumpState(const char* name, const uint8_t* state)
+void DumpState(const char *name, const uint8_t *state)
 {
     LOGLN("%s:", name);
 
@@ -55,18 +59,18 @@ void DumpState(const char* name, const uint8_t* state)
 
 void SetupBsec()
 {
-    Wire.begin(pins.I2C_SDA, pins.I2C_SCL);
+    Wire.begin(board.pins.I2C_SDA, board.pins.I2C_SCL);
 
     sensor.begin(BME680_I2C_ADDR_SECONDARY, Wire);
     if (!CheckSensor()) {
         LOGLN("Failed to init BME680, check wiring!");
-        FatalError();
+        board.FatalError();
     }
     LOGLN("BSEC version %d.%d.%d.%d.", sensor.version.major, sensor.version.minor, sensor.version.major_bugfix, sensor.version.minor_bugfix);
 
     sensor.setConfig(bsec_config_iaq);
     if (!CheckSensor()) {
-        FatalError();
+        board.FatalError();
     }
 
     if (sensor_state_time) {
@@ -76,7 +80,7 @@ void SetupBsec()
         sensor.setState(sensor_state);
 
         if (!CheckSensor()) {
-            FatalError();
+            board.FatalError();
         } else {
             LOGLN("Successfully set state from %lld.", sensor_state_time);
         }
@@ -96,7 +100,7 @@ void SetupBsec()
                         LogRestart("Invalid BSEC data. Deleted.");
                     #endif
 
-                    DeepSleep(10);
+                    board.DeepSleep(10);
                 } else {
                     LOGLN("Successfully set state from file.");
                 }
@@ -122,12 +126,13 @@ void SetupBsec()
     sensor.updateSubscription(sensor_list, sizeof(sensor_list) / sizeof(sensor_list[0]), BSEC_SAMPLE_RATE_ULP);
     if (!CheckSensor()) {
         LOGLN("Failed to update subscription!");
-        FatalError();
+        board.FatalError();
     }
 
     LOGLN("BSEC sensor init done.");
 }
 
+#ifndef UNIT_TEST
 void setup()
 {
     Serial.begin(115200);
@@ -136,8 +141,8 @@ void setup()
         SetupSD();
     #endif
 
-    SetupWifi(wifi_ssid, wifi_password);
-    SetupTime();
+    board.SetupWifi(config.wifi_ssid, config.wifi_password);
+    board.SetupTime();
     SetupBsec();
     SetupMQTT();
 
@@ -171,7 +176,7 @@ void loop()
             SetPlantMoistureLed(plant_moisture);
         #endif
 
-        sensor_state_time = GetTimestamp();
+        sensor_state_time = board.GetTimestamp();
         sensor.getState(sensor_state);
         #ifdef BSEC_DUNP_STATE
             DumpState("saveState", sensor_state);
@@ -191,6 +196,7 @@ void loop()
             DisplayData(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
         #endif
 
-        DeepSleep(5 * 60);
+        board.DeepSleep(5 * 60);
     }
 }
+#endif
