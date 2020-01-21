@@ -86,7 +86,6 @@
                     state[i] = x;
                 } else {
                     sd_file.close();
-                    // EndSD();
                     return false;
                 }
             }

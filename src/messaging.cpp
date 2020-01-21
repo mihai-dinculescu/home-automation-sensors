@@ -7,7 +7,11 @@
 #include "logging.h"
 #include "messaging.h"
 
-MQTTClient mqtt_client(256);
+#ifdef CAPABILITIES_MQTT_CONFIG
+    MQTTClient mqtt_client(834);
+#else
+    MQTTClient mqtt_client(256);
+#endif
 
 void SetupMQTT()
 {
