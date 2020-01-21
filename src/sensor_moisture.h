@@ -1,5 +1,5 @@
-#ifndef MOISTURE_SENSOR_H
-    #define MOISTURE_SENSOR_H
+#ifndef SENSOR_MOISTURE_H
+    #define SENSOR_MOISTURE_H
 
     #include <Adafruit_seesaw.h>
     #include <HTTPClient.h>

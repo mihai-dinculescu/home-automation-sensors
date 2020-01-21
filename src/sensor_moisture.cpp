@@ -3,7 +3,7 @@
 #ifdef CAPABILITIES_MOISTURE_SENSOR
     #include <ArduinoJson.h>
 
-    #include "moisture_sensor.h"
+    #include "sensor_moisture.h"
     #include "MAD_ESP32.h"
 
     Adafruit_seesaw   seesaw_soil;
