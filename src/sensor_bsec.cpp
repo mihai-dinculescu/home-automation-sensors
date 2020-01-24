@@ -1,11 +1,16 @@
 #include <bsec.h>
 #include "sensor_bsec_serialized_configurations_iaq.h"
 
+#include "config.h"
 #include "MAD_ESP32.h"
 
 #ifdef CAPABILITIES_MQTT_CONFIG
     #include "mqtt_config.h"
     MQTTConfig *mqtt_config;
+#endif
+
+#ifdef CAPABILITIES_SD
+    #include "logging.h"
 #endif
 
 RTC_DATA_ATTR uint8_t sensor_state[BSEC_MAX_STATE_BLOB_SIZE] = {0};

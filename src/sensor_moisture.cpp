@@ -23,7 +23,7 @@
         return seesaw_soil.touchRead(0);
     }
 
-    void ReadConfig(uint16_t *out_moisture_threshold)
+    void ReadMoistureConfig(uint16_t *out_moisture_threshold)
     {
         HTTPClient http_client;
 
@@ -46,24 +46,6 @@
             *out_moisture_threshold = doc["feeds"][0]["field1"];
         } else {
             LOGLN("Error in getting config: %d!", response_code);
-        }
-    }
-
-    void SetPlantMoistureLed(uint16_t plant_moisture)
-    {
-        uint16_t plant_moisture_threshold = 0;
-        ReadConfig(&plant_moisture_threshold);
-        LOGLN("Plant moisture threshold %d", plant_moisture_threshold);
-
-        pinMode(*config.moisture_warning_pin, OUTPUT);
-        if (plant_moisture <= plant_moisture_threshold) {
-            digitalWrite(*config.moisture_warning_pin, HIGH);
-            gpio_hold_en((gpio_num_t)*config.moisture_warning_pin);
-            gpio_deep_sleep_hold_en();
-        } else {
-            digitalWrite(*config.moisture_warning_pin, LOW);
-            gpio_hold_dis((gpio_num_t)*config.moisture_warning_pin);
-            gpio_deep_sleep_hold_dis();
         }
     }
 #endif

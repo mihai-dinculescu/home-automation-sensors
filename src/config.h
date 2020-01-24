@@ -8,18 +8,19 @@
 
     // 0 - Living Room
     // 1 - Master Bedroom
-    #define SENSOR_LOCATION 1
+    #define SENSOR_LOCATION 0
 
     // #define BSEC_DUNP_STATE
 
     #if SENSOR_LOCATION == 0
-        #define CAPABILITIES_DISPLAY
+        // #define CAPABILITIES_DISPLAY
+        #define CAPABILITIES_IAQ_WARNING
     #elif SENSOR_LOCATION == 1
-        #define CAPABILITIES_SD
         #define CAPABILITIES_MOISTURE_SENSOR
     #endif
 
     // #define CAPABILITIES_MQTT_CONFIG
+    #define CAPABILITIES_SD
 
     struct Config {
         const char           *wifi_ssid               = config_secrets.wifi_ssid;
@@ -54,6 +55,10 @@
             const uint8_t    seesaw_soil_i2c_addr     = 0x36;
             const uint16_t   *moisture_warning_pin    = &board.pins.A0;
             const char       *config_url              = config_secrets.config_url;
+        #endif
+
+        #ifdef CAPABILITIES_IAQ_WARNING
+            const uint16_t   *iaq_warning_pin         = &board.pins.A1;
         #endif
     };
 

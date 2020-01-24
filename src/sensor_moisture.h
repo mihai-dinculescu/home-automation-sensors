@@ -9,5 +9,5 @@
 
     void SetupMoistureSensor();
     uint16_t ReadMoisture();
-    void SetPlantMoistureLed(uint16_t plant_moisture);
+    void ReadMoistureConfig(uint16_t *out_moisture_threshold);
 #endif
