@@ -11,7 +11,7 @@
         display.begin(SSD1306_SWITCHCAPVCC, config.ssd1306_i2c_addr);
         display.setTextSize(1);
         display.setTextColor(WHITE);
-        LOGLN("LCD init done.");
+        LOGLNT("LCD init done.");
     }
 
     void DisplayData(float temperature, float humidity, float pressure, float iaq_estimate, uint16_t iaq_accuracy, uint16_t plant_moisture)

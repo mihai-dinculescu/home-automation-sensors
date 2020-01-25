@@ -1,16 +1,19 @@
+#include <sstream>
+#include <iostream>
+#include <string>
+
 #include "config.h"
 #include "MAD_ESP32.h"
+#include "messaging.h"
 
 #include "sensor_bsec.h"
 
-#ifdef CAPABILITIES_MOISTURE_SENSOR
-    #include "sensor_moisture.h"
-#endif
-
-#include "messaging.h"
-
 #ifdef CAPABILITIES_SD
     #include "logging.h"
+#endif
+
+#ifdef CAPABILITIES_MOISTURE_SENSOR
+    #include "sensor_moisture.h"
 #endif
 
 #ifdef CAPABILITIES_DISPLAY
@@ -31,6 +34,42 @@ bool SetWarningLed(uint16_t pin_address, bool show_warning)
     }
 }
 
+void Restart(const char *message)
+{
+    LOGLN(" RESTARTING.");
+
+    #ifdef CAPABILITIES_SD
+        LogRestart(message);
+    #endif
+
+    Serial.flush();
+    board.DeepSleep(10);
+}
+
+const char* GenerateMessage(float temperature, float humidity, float pressure, float iaq_estimate, uint16_t iaq_accuracy, uint16_t plant_moisture)
+{
+    std::ostringstream messageStream;
+
+    messageStream << "{";
+    messageStream << "\"location\":\"" << config.mqtt_location << "\"";
+    messageStream << ",\"temperature\":" << temperature;
+    messageStream << ",\"humidity\":" << humidity;
+    messageStream << ",\"pressure\":" << pressure / 100; // hPa
+    messageStream << ",\"iaq_estimate\":" << iaq_estimate;
+    messageStream << ",\"iaq_accuracy\":" << iaq_accuracy;
+
+    #ifdef CAPABILITIES_MOISTURE_SENSOR
+        messageStream << ",\"plant_moisture\":" << plant_moisture;
+    #endif
+
+    messageStream << "}";
+
+    std::string messageString = messageStream.str();
+    const char* messageChar = messageString.c_str();
+
+    return messageChar;
+}
+
 #ifndef UNIT_TEST
 void setup()
 {
@@ -40,10 +79,16 @@ void setup()
         SetupSD();
     #endif
 
-    board.SetupWifi(config.wifi_ssid, config.wifi_password);
-    board.SetupTime();
+    if (!board.SetupWifi(config.wifi_ssid, config.wifi_password)) {
+        Restart("WiFi connect timeout.");
+    }
+
+    if (!board.SetupTime()) {
+        Restart("Time fetch timeout.");
+    }
+
     SetupBsec();
-    SetupMQTT();
+    SetupMQTT(config.mqtt_broker);
 
     #ifdef CAPABILITIES_MOISTURE_SENSOR
         SetupMoistureSensor();
@@ -60,12 +105,12 @@ void loop()
     delay(10);
 
     if (sensor.run()) {
-        LOGLN("Temperature raw %.2f compensated %.2f", sensor.rawTemperature, sensor.temperature);
-        LOGLN("Humidity raw %.2f compensated %.2f", sensor.rawHumidity, sensor.humidity);
-        LOGLN("Pressure %.2f kPa", sensor.pressure / 1000);
-        LOGLN("IAQ %.0f accuracy %d", sensor.iaq, sensor.iaqAccuracy);
-        LOGLN("Static IAQ %.0f accuracy %d", sensor.staticIaq, sensor.staticIaqAccuracy);
-        LOGLN("Gas resistance %.2f kOhm", sensor.gasResistance / 1000);
+        LOGLNT("Temperature raw %.2f compensated %.2f", sensor.rawTemperature, sensor.temperature);
+        LOGLNT("Humidity raw %.2f compensated %.2f", sensor.rawHumidity, sensor.humidity);
+        LOGLNT("Pressure %.2f kPa", sensor.pressure / 1000);
+        LOGLNT("IAQ %.0f accuracy %d", sensor.iaq, sensor.iaqAccuracy);
+        LOGLNT("Static IAQ %.0f accuracy %d", sensor.staticIaq, sensor.staticIaqAccuracy);
+        LOGLNT("Gas resistance %.2f kOhm", sensor.gasResistance / 1000);
 
         bool hold_pins = false;
 
@@ -78,11 +123,11 @@ void loop()
         uint16_t plant_moisture = 0;
         #ifdef CAPABILITIES_MOISTURE_SENSOR
             plant_moisture = ReadMoisture();
-            LOGLN("Plant moisture %d", plant_moisture);
+            LOGLNT("Plant moisture %d", plant_moisture);
             uint16_t plant_moisture_threshold = 0;
 
             ReadMoistureConfig(&plant_moisture_threshold);
-            LOGLN("Plant moisture threshold %d", plant_moisture_threshold);
+            LOGLNT("Plant moisture threshold %d", plant_moisture_threshold);
 
             if (SetWarningLed(*config.moisture_warning_pin, plant_moisture <= plant_moisture_threshold)) {
                 hold_pins = true;
@@ -97,11 +142,19 @@ void loop()
 
         SaveBsecState();
 
-        LogData(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
-
         #ifdef CAPABILITIES_DISPLAY
             DisplayData(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
         #endif
+
+        if (!ConnectMQTT(config.mqtt_client_id)) {
+            Restart("MQTT connect timeout.");
+        }
+
+        const char* message = GenerateMessage(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
+
+        if (!PublishMessage(config.mqtt_topic, message)) {
+            Restart("MQTT publish failed.");
+        }
 
         board.DeepSleep(5 * 60);
     }

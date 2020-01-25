@@ -5,6 +5,7 @@
 
     extern MQTTClient mqtt_client;
 
-    void SetupMQTT();
-    void LogData(float temperature, float humidity, float pressure, float iaq_estimate, uint16_t iaq_accuracy, uint16_t plant_moisture);
+    void SetupMQTT(const char *mqtt_broker);
+    bool ConnectMQTT(const char *client_id);
+    bool PublishMessage(const char* mqtt_topic, const char* message);
 #endif

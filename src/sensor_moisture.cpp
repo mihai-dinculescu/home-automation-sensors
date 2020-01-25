@@ -12,10 +12,10 @@
     void SetupMoistureSensor()
     {
         if (!seesaw_soil.begin(config.seesaw_soil_i2c_addr)) {
-            LOGLN("Failed to init Seesaw soil!");
+            LOGLNT("Failed to init Seesaw soil!");
             board.FatalError();
         }
-        LOGLN("Seesaw Soil init done.");
+        LOGLNT("Seesaw Soil init done.");
     }
 
     uint16_t ReadMoisture()
@@ -40,12 +40,12 @@
             DeserializationError error = deserializeJson(doc, result);
 
             if (error) {
-                LOGLN("deserializeJson() failed: %s!", error.c_str());
+                LOGLNT("deserializeJson() failed: %s!", error.c_str());
             }
 
             *out_moisture_threshold = doc["feeds"][0]["field1"];
         } else {
-            LOGLN("Error in getting config: %d!", response_code);
+            LOGLNT("Error in getting config: %d!", response_code);
         }
     }
 #endif

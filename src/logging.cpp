@@ -8,7 +8,7 @@
 
     void SetupSD()
     {
-        LOG("Initializing SD card. ");
+        LOGT("Initializing SD card.");
 
         pinMode(*config.sd_chip_select, OUTPUT);
 
@@ -31,7 +31,7 @@
             SD.mkdir("/data");
         }
 
-        LOG("DONE.\n");
+        LOGLN(" DONE.");
     }
 
     void LogRestart(const char *message)
@@ -40,13 +40,13 @@
         sd_file = SD.open("/logs/restart.txt", FILE_APPEND);
 
         if (sd_file) {
-            Serial.print("Writing to /logs/restart.txt.");
+            LOGT("Writing to /logs/restart.txt.");
             sd_file.printf("%09llu: %s\n", board.GetTimestamp(), message);
             sd_file.flush();
             sd_file.close();
-            Serial.println(" DONE.");
+            LOGLN(" DONE.");
         } else {
-            LOGLN("Failed to write to SD card!");
+            LOGLNT("Failed to write to SD card!");
             board.FatalError();
         }
     }
@@ -64,7 +64,7 @@
             sd_file.flush();
             sd_file.close();
         } else {
-            LOGLN("Failed to write to SD card!");
+            LOGLNT("Failed to write to SD card!");
             board.FatalError();
         }
     }

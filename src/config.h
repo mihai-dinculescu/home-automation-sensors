@@ -14,13 +14,13 @@
 
     #if SENSOR_LOCATION == 0
         // #define CAPABILITIES_DISPLAY
-        #define CAPABILITIES_IAQ_WARNING
     #elif SENSOR_LOCATION == 1
         #define CAPABILITIES_MOISTURE_SENSOR
     #endif
 
-    // #define CAPABILITIES_MQTT_CONFIG
     #define CAPABILITIES_SD
+    #define CAPABILITIES_IAQ_WARNING
+    // #define CAPABILITIES_MQTT_CONFIG
 
     struct Config {
         const char           *wifi_ssid               = config_secrets.wifi_ssid;

@@ -20,17 +20,17 @@ Bsec sensor;
 
 bool CheckSensor() {
     if (sensor.status < BSEC_OK) {
-        LOGLN("BSEC error, status %d!", sensor.status);
+        LOGLNT("BSEC error, status %d!", sensor.status);
         return false;
     } else if (sensor.status > BSEC_OK) {
-        LOGLN("BSEC warning, status %d!", sensor.status);
+        LOGLNT("BSEC warning, status %d!", sensor.status);
     }
 
     if (sensor.bme680Status < BME680_OK) {
-        LOGLN("Sensor error, bme680_status %d!", sensor.bme680Status);
+        LOGLNT("Sensor error, bme680_status %d!", sensor.bme680Status);
         return false;
     } else if (sensor.bme680Status > BME680_OK) {
-        LOGLN("Sensor warning, status %d!", sensor.bme680Status);
+        LOGLNT("Sensor warning, status %d!", sensor.bme680Status);
     }
 
     return true;
@@ -39,7 +39,7 @@ bool CheckSensor() {
 #ifdef BSEC_DUNP_STATE
 void DumpState(const char *name, const uint8_t *state)
 {
-    LOGLN("%s:", name);
+    LOGLNT("%s:", name);
 
     for (int i = 0; i < BSEC_MAX_STATE_BLOB_SIZE; i++) {
         LOG("%02x ", state[i]);
@@ -64,10 +64,10 @@ void SetupBsec()
 
     sensor.begin(BME680_I2C_ADDR_SECONDARY, Wire);
     if (!CheckSensor()) {
-        LOGLN("Failed to init BME680, check wiring!");
+        LOGLNT("Failed to init BME680, check wiring!");
         board.FatalError();
     }
-    LOGLN("BSEC version %d.%d.%d.%d.", sensor.version.major, sensor.version.minor, sensor.version.major_bugfix, sensor.version.minor_bugfix);
+    LOGLNT("BSEC version %d.%d.%d.%d.", sensor.version.major, sensor.version.minor, sensor.version.major_bugfix, sensor.version.minor_bugfix);
 
     sensor.setConfig(bsec_config_iaq);
     if (!CheckSensor()) {
@@ -83,10 +83,10 @@ void SetupBsec()
         if (!CheckSensor()) {
             board.FatalError();
         } else {
-            LOGLN("Successfully set state from %lld.", sensor_state_time);
+            LOGLNT("Successfully set state from %lld.", sensor_state_time);
         }
     } else {
-        LOGLN("Saved state missing!");
+        LOGLNT("Saved state missing!");
 
         #ifdef CAPABILITIES_MQTT_CONFIG
             mqtt_config = new MQTTConfig(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
@@ -101,10 +101,10 @@ void SetupBsec()
                 if (!CheckSensor()) {
                     board.FatalError();
                 } else {
-                    LOGLN("Successfully set state from MQTT.");
+                    LOGLNT("Successfully set state from MQTT.");
                 }
             } else {
-                LOGLN("Failed to fetch state from MQTT!");
+                LOGLNT("Failed to fetch state from MQTT!");
             }
         #endif
 
@@ -123,10 +123,10 @@ void SetupBsec()
 
                     board.DeepSleep(10);
                 } else {
-                    LOGLN("Successfully set state from file.");
+                    LOGLNT("Successfully set state from file.");
                 }
             } else {
-                LOGLN("Saved state SD missing!");
+                LOGLNT("Saved state SD missing!");
             }
         #endif
     }
@@ -146,11 +146,11 @@ void SetupBsec()
 
     sensor.updateSubscription(sensor_list, sizeof(sensor_list) / sizeof(sensor_list[0]), BSEC_SAMPLE_RATE_ULP);
     if (!CheckSensor()) {
-        LOGLN("Failed to update subscription!");
+        LOGLNT("Failed to update subscription!");
         board.FatalError();
     }
 
-    LOGLN("BSEC sensor init done.");
+    LOGLNT("BSEC sensor init done.");
 }
 
 void SaveBsecState()
@@ -160,19 +160,19 @@ void SaveBsecState()
     #ifdef BSEC_DUNP_STATE
         DumpState("saveState", sensor_state);
     #endif
-    LOGLN("Saved state to RTC memory at %lld", sensor_state_time);
+    LOGLNT("Saved state to RTC memory at %lld", sensor_state_time);
 
     #ifdef CAPABILITIES_MQTT_CONFIG
         if (mqtt_config->SendConfigMessage()) {
-            LOGLN("Saved state to MQTT.");
+            LOGLNT("Saved state to MQTT.");
         } else {
-            LOGLN("Failed to save state to MQTT. Reason %d!", mqtt_client.lastError());
+            LOGLNT("Failed to save state to MQTT. Reason %d!", mqtt_client.lastError());
             board.DeepSleep(10);
         }
     #endif
 
     #ifdef CAPABILITIES_SD
         DataWrite(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
-        LOGLN("Saved state to file.");
+        LOGLNT("Saved state to file.");
     #endif
 }
