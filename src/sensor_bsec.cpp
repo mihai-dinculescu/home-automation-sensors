@@ -1,5 +1,21 @@
 #include <bsec.h>
-#include "sensor_bsec_serialized_configurations_iaq.h"
+
+/* Configure the BSEC library with information about the sensor
+    18v/33v = Voltage at Vdd. 1.8V or 3.3V
+    3s/300s = BSEC operating mode, BSEC_SAMPLE_RATE_LP or BSEC_SAMPLE_RATE_ULP
+    4d/28d = Operating age of the sensor in days
+    generic_18v_3s_4d
+    generic_18v_3s_28d
+    generic_18v_300s_4d
+    generic_18v_300s_28d
+    generic_33v_3s_4d
+    generic_33v_3s_28d
+    generic_33v_300s_4d
+    generic_33v_300s_28d
+*/
+const uint8_t bsec_config_iaq[] = {
+#include "config/generic_33v_300s_28d/bsec_iaq.txt"
+};
 
 #include "config.h"
 #include "MAD_ESP32.h"
@@ -70,7 +86,9 @@ void SetupBsec()
     LOGLNT("BSEC version %d.%d.%d.%d.", sensor.version.major, sensor.version.minor, sensor.version.major_bugfix, sensor.version.minor_bugfix);
 
     sensor.setConfig(bsec_config_iaq);
+
     if (!CheckSensor()) {
+        LOGLNT("Invalid BSEC config!");
         board.FatalError();
     }
 
@@ -157,6 +175,7 @@ void SaveBsecState()
 {
     sensor_state_time = board.GetTimestamp();
     sensor.getState(sensor_state);
+
     #ifdef BSEC_DUNP_STATE
         DumpState("saveState", sensor_state);
     #endif
@@ -175,4 +194,9 @@ void SaveBsecState()
         DataWrite(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
         LOGLNT("Saved state to file.");
     #endif
+
+    if (!CheckSensor()) {
+        LOGLNT("Invalid BSEC config after save state!");
+        board.FatalError();
+    }
 }

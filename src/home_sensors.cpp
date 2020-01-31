@@ -104,7 +104,7 @@ void loop()
     mqtt_client.loop();
     delay(10);
 
-    if (sensor.run()) {
+    if (sensor.run(board.GetTimestamp())) {
         LOGLNT("Temperature raw %.2f compensated %.2f", sensor.rawTemperature, sensor.temperature);
         LOGLNT("Humidity raw %.2f compensated %.2f", sensor.rawHumidity, sensor.humidity);
         LOGLNT("Pressure %.2f kPa", sensor.pressure / 1000);
@@ -157,6 +157,10 @@ void loop()
         }
 
         board.DeepSleep(5 * 60);
+        // uint64_t time_us = ((sensor.nextCall - board.GetTimestamp()) * 1000) - esp_timer_get_time();
+        // LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000, sensor.nextCall);
+        // esp_sleep_enable_timer_wakeup(time_us);
+        // esp_deep_sleep_start();
     }
 }
 #endif
