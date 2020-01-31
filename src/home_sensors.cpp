@@ -115,7 +115,7 @@ void loop()
         bool hold_pins = false;
 
         #ifdef CAPABILITIES_IAQ_WARNING
-            if (SetWarningLed(*config.iaq_warning_pin, sensor.iaq >= 151)) {
+            if (SetWarningLed(*config.iaq_warning_pin, sensor.iaq >= config.iaq_warning_threshold)) {
                 hold_pins = true;
             }
         #endif

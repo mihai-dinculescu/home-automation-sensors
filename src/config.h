@@ -58,6 +58,7 @@
         #endif
 
         #ifdef CAPABILITIES_IAQ_WARNING
+            const uint16_t   iaq_warning_threshold    = 101;
             const uint16_t   *iaq_warning_pin         = &board.pins.A1;
         #endif
     };
