@@ -76,4 +76,10 @@ void Board::DeepSleep(uint16_t seconds)
     esp_deep_sleep_start();
 }
 
+void Board::DeepSleepRaw(uint64_t time_us)
+{
+    esp_sleep_enable_timer_wakeup(time_us);
+    esp_deep_sleep_start();
+}
+
 Board board;

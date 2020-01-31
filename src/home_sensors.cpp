@@ -34,12 +34,12 @@ bool SetWarningLed(uint16_t pin_address, bool show_warning)
     }
 }
 
-void Restart(const char *message)
+void LogErrorAndSleep(const char *message)
 {
     LOGLN(" RESTARTING.");
 
     #ifdef CAPABILITIES_SD
-        LogRestart(message);
+        LogError(message);
     #endif
 
     Serial.flush();
@@ -80,11 +80,11 @@ void setup()
     #endif
 
     if (!board.SetupWifi(config.wifi_ssid, config.wifi_password)) {
-        Restart("WiFi connect timeout.");
+        LogErrorAndSleep("WiFi connect timeout.");
     }
 
     if (!board.SetupTime()) {
-        Restart("Time fetch timeout.");
+        LogErrorAndSleep("Time fetch timeout.");
     }
 
     SetupBsec();
@@ -146,21 +146,19 @@ void loop()
             DisplayData(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
         #endif
 
-        if (!ConnectMQTT(config.mqtt_client_id)) {
-            Restart("MQTT connect timeout.");
+        if (ConnectMQTT(config.mqtt_client_id)) {
+            const char* message = GenerateMessage(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
+
+            if (!PublishMessage(config.mqtt_topic, message)) {
+                LogError("MQTT publish failed.");
+            }
+        } else {
+            LogError("MQTT connect timeout.");
         }
 
-        const char* message = GenerateMessage(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
-
-        if (!PublishMessage(config.mqtt_topic, message)) {
-            Restart("MQTT publish failed.");
-        }
-
-        board.DeepSleep(5 * 60);
-        // uint64_t time_us = ((sensor.nextCall - board.GetTimestamp()) * 1000) - esp_timer_get_time();
-        // LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000, sensor.nextCall);
-        // esp_sleep_enable_timer_wakeup(time_us);
-        // esp_deep_sleep_start();
+        uint64_t time_us = ((sensor.nextCall - board.GetTimestamp()) * 1000) - esp_timer_get_time();
+        LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000, sensor.nextCall);
+        board.DeepSleepRaw(time_us);
     }
 }
 #endif

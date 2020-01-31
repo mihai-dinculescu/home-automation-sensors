@@ -34,7 +34,7 @@
         LOGLN(" DONE.");
     }
 
-    void LogRestart(const char *message)
+    void LogError(const char *message)
     {
         File sd_file;
         sd_file = SD.open("/logs/restart.txt", FILE_APPEND);

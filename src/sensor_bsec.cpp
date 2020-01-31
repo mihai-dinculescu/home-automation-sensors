@@ -136,7 +136,7 @@ void SetupBsec()
                 if (!CheckSensor()) {
                     #ifdef CAPABILITIES_SD
                         DataDelete();
-                        LogRestart("Invalid BSEC data. Deleted.");
+                        LogError("Invalid BSEC data. Deleted.");
                     #endif
 
                     board.DeepSleep(10);

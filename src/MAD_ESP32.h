@@ -23,6 +23,7 @@
             int64_t GetTimestamp();
             void FatalError();
             void DeepSleep(uint16_t seconds);
+            void DeepSleepRaw(uint64_t time_us);
 
         private:
             void BlinkErrorLed(uint16_t interval);
