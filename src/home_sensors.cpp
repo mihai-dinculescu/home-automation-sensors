@@ -84,7 +84,7 @@ void setup()
     }
 
     SetupBsec();
-    SetupMQTT(config.mqtt_broker);
+    messaging.Setup(config.mqtt_broker);
 
     #ifdef CAPABILITIES_MOISTURE_SENSOR
         SetupMoistureSensor();
@@ -93,7 +93,7 @@ void setup()
 
 void loop()
 {
-    mqtt_client.loop();
+    messaging.Loop();
     delay(10);
 
     if (sensor.run(board.GetTimestamp())) {
@@ -134,10 +134,10 @@ void loop()
 
         SaveBsecState();
 
-        if (ConnectMQTT(config.mqtt_client_id)) {
+        if (messaging.Connect(config.mqtt_client_id)) {
             const char* message = GenerateMessage(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
 
-            if (!PublishMessage(config.mqtt_topic, message)) {
+            if (!messaging.Publish(config.mqtt_topic, message)) {
                 LogError("MQTT publish failed.");
             }
         } else {
