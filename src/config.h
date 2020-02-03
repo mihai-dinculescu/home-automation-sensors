@@ -20,7 +20,6 @@
 
     #define CAPABILITIES_SD
     #define CAPABILITIES_IAQ_WARNING
-    // #define CAPABILITIES_MQTT_CONFIG
 
     struct Config {
         const char           *wifi_ssid               = config_secrets.wifi_ssid;
@@ -31,16 +30,10 @@
             const char       *mqtt_location           = "Living Room";
             const char       *mqtt_client_id          = "mqtt_client_living_room";
             const char       *mqtt_topic              = "sensors/living_room";
-            #ifdef CAPABILITIES_MQTT_CONFIG
-                const char   *mqtt_topic_memory       = "memory/sensors/living_room";
-            #endif
         #elif SENSOR_LOCATION == 1
             const char       *mqtt_location           = "Master Bedroom";
             const char       *mqtt_client_id          = "mqtt_client_bedroom_master";
             const char       *mqtt_topic              = "sensors/bedroom_master";
-            #ifdef CAPABILITIES_MQTT_CONFIG
-                const char   *mqtt_topic_memory       = "memory/sensors/bedroom_master";
-            #endif
         #endif
 
         #ifdef CAPABILITIES_DISPLAY

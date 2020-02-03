@@ -20,11 +20,6 @@ const uint8_t bsec_config_iaq[] = {
 #include "config.h"
 #include "MAD_ESP32.h"
 
-#ifdef CAPABILITIES_MQTT_CONFIG
-    #include "mqtt_config.h"
-    MQTTConfig *mqtt_config;
-#endif
-
 #ifdef CAPABILITIES_SD
     #include "logging.h"
 #endif
@@ -68,12 +63,6 @@ void DumpState(const char *name, const uint8_t *state)
 }
 #endif
 
-#ifdef CAPABILITIES_MQTT_CONFIG
-void MessageReceived(String &topic, String &payload) {
-    mqtt_config->HandleMessageReceived(payload);
-}
-#endif
-
 void SetupBsec()
 {
     Wire.begin(board.pins.I2C_SDA, board.pins.I2C_SCL);
@@ -105,26 +94,6 @@ void SetupBsec()
         }
     } else {
         LOGLNT("Saved state missing!");
-
-        #ifdef CAPABILITIES_MQTT_CONFIG
-            mqtt_config = new MQTTConfig(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
-            mqtt_config->ReceiveConfigMessage(MessageReceived);
-
-            if (mqtt_config->received_status) {
-                #ifdef BSEC_DUNP_STATE
-                    DumpState("retrieveStateSD", sensor_state);
-                #endif
-                sensor.setState(sensor_state);
-
-                if (!CheckSensor()) {
-                    board.FatalError();
-                } else {
-                    LOGLNT("Successfully set state from MQTT.");
-                }
-            } else {
-                LOGLNT("Failed to fetch state from MQTT!");
-            }
-        #endif
 
         #ifdef CAPABILITIES_SD
             if (DataRead(BSEC_MAX_STATE_BLOB_SIZE, sensor_state)) {
@@ -180,15 +149,6 @@ void SaveBsecState()
         DumpState("saveState", sensor_state);
     #endif
     LOGLNT("Saved state to RTC memory at %lld", sensor_state_time);
-
-    #ifdef CAPABILITIES_MQTT_CONFIG
-        if (mqtt_config->SendConfigMessage()) {
-            LOGLNT("Saved state to MQTT.");
-        } else {
-            LOGLNT("Failed to save state to MQTT. Reason %d!", mqtt_client.lastError());
-            board.DeepSleep(10);
-        }
-    #endif
 
     #ifdef CAPABILITIES_SD
         DataWrite(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
