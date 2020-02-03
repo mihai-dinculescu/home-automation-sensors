@@ -14,6 +14,7 @@
 
     #if SENSOR_LOCATION == 1
         #define CAPABILITIES_MOISTURE_SENSOR
+        #define CAPABILITIES_CONFIG_REMOTE
     #endif
 
     #define CAPABILITIES_SD
@@ -41,6 +42,9 @@
         #ifdef CAPABILITIES_MOISTURE_SENSOR
             const uint8_t    seesaw_soil_i2c_addr     = 0x36;
             const uint16_t   *moisture_warning_pin    = &board.pins.A0;
+        #endif
+
+        #ifdef CAPABILITIES_CONFIG_REMOTE
             const char       *config_url              = config_secrets.config_url;
         #endif
 

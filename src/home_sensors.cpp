@@ -12,6 +12,10 @@
     #include "storage.h"
 #endif
 
+#ifdef CAPABILITIES_CONFIG_REMOTE
+    #include "config_remote.h"
+#endif
+
 #ifdef CAPABILITIES_MOISTURE_SENSOR
     #include "sensor_moisture.h"
 #endif
@@ -87,7 +91,7 @@ void setup()
     messaging.Setup(config.mqtt_broker);
 
     #ifdef CAPABILITIES_MOISTURE_SENSOR
-        SetupMoistureSensor();
+        sensor_moisture.Setup(config.seesaw_soil_i2c_addr);
     #endif
 }
 
@@ -112,18 +116,22 @@ void loop()
             }
         #endif
 
+        #ifdef CAPABILITIES_CONFIG_REMOTE
+            config_remote.Read(config.config_url);
+        #endif
+
         uint16_t plant_moisture = 0;
         #ifdef CAPABILITIES_MOISTURE_SENSOR
-            plant_moisture = ReadMoisture();
+            plant_moisture = sensor_moisture.Read();
             LOGLNT("Plant moisture %d", plant_moisture);
-            uint16_t plant_moisture_threshold = 0;
 
-            ReadMoistureConfig(&plant_moisture_threshold);
-            LOGLNT("Plant moisture threshold %d", plant_moisture_threshold);
+            #ifdef CAPABILITIES_CONFIG_REMOTE
+                LOGLNT("Plant moisture threshold %d", config_remote.GetField1());
 
-            if (SetWarningLed(*config.moisture_warning_pin, plant_moisture <= plant_moisture_threshold)) {
-                hold_pins = true;
-            }
+                if (SetWarningLed(*config.moisture_warning_pin, plant_moisture <= config_remote.GetField1())) {
+                    hold_pins = true;
+                }
+            #endif
         #endif
 
         if (hold_pins) {

@@ -2,12 +2,15 @@
     #define SENSOR_MOISTURE_H
 
     #include <Adafruit_seesaw.h>
-    #include <HTTPClient.h>
 
-    extern Adafruit_seesaw   seesaw_soil;
-    extern WiFiClientSecure  http_client;
+    class SensorMoisture
+    {
+        Adafruit_seesaw _seesaw_soil;
 
-    void SetupMoistureSensor();
-    uint16_t ReadMoisture();
-    void ReadMoistureConfig(uint16_t *out_moisture_threshold);
+        public:
+            void Setup(const uint8_t addr);
+            uint16_t Read();
+    };
+
+    extern SensorMoisture sensor_moisture;
 #endif
