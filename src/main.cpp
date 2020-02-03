@@ -4,13 +4,10 @@
 
 #include "config.h"
 #include "MAD_ESP32.h"
+
 #include "messaging.h"
-
+#include "storage.h"
 #include "sensor_bsec.h"
-
-#ifdef CAPABILITIES_SD
-    #include "storage.h"
-#endif
 
 #ifdef CAPABILITIES_CONFIG_REMOTE
     #include "config_remote.h"
@@ -37,10 +34,7 @@ bool SetWarningLed(uint16_t pin_address, bool show_warning)
 void LogErrorAndSleep(const char *message)
 {
     LOGLN(" RESTARTING.");
-
-    #ifdef CAPABILITIES_SD
-        storage.LogError(message);
-    #endif
+    storage.LogError(message);
 
     Serial.flush();
     board.DeepSleep(10);
@@ -75,9 +69,7 @@ void setup()
 {
     Serial.begin(115200);
 
-    #ifdef CAPABILITIES_SD
-        storage.Setup();
-    #endif
+    storage.Setup();
 
     if (!board.SetupWifi(config.wifi_ssid, config.wifi_password)) {
         LogErrorAndSleep("WiFi connect timeout.");
@@ -87,7 +79,7 @@ void setup()
         LogErrorAndSleep("Time fetch timeout.");
     }
 
-    SetupBsec();
+    sensor_bsec.Setup();
     messaging.Setup(config.mqtt_broker);
 
     #ifdef CAPABILITIES_MOISTURE_SENSOR
@@ -100,21 +92,19 @@ void loop()
     messaging.Loop();
     delay(10);
 
-    if (sensor.run(board.GetTimestamp())) {
-        LOGLNT("Temperature raw %.2f compensated %.2f", sensor.rawTemperature, sensor.temperature);
-        LOGLNT("Humidity raw %.2f compensated %.2f", sensor.rawHumidity, sensor.humidity);
-        LOGLNT("Pressure %.2f kPa", sensor.pressure / 1000);
-        LOGLNT("IAQ %.0f accuracy %d", sensor.iaq, sensor.iaqAccuracy);
-        LOGLNT("Static IAQ %.0f accuracy %d", sensor.staticIaq, sensor.staticIaqAccuracy);
-        LOGLNT("Gas resistance %.2f kOhm", sensor.gasResistance / 1000);
+    if (sensor_bsec.Run(board.GetTimestamp())) {
+        LOGLNT("Temperature raw %.2f compensated %.2f", sensor_bsec.getRawTemperature(), sensor_bsec.getTemperature());
+        LOGLNT("Humidity raw %.2f compensated %.2f", sensor_bsec.getRawHumidity(), sensor_bsec.getHumidity());
+        LOGLNT("Pressure %.2f kPa", sensor_bsec.getPressure() / 1000);
+        LOGLNT("IAQ %.0f accuracy %d", sensor_bsec.getIaq(), sensor_bsec.getIaqAccuracy());
+        LOGLNT("Static IAQ %.0f accuracy %d", sensor_bsec.getStaticIaq(), sensor_bsec.getStaticIaqAccuracy());
+        LOGLNT("Gas resistance %.2f kOhm", sensor_bsec.getGasResistance() / 1000);
 
         bool hold_pins = false;
 
-        #ifdef CAPABILITIES_IAQ_WARNING
-            if (SetWarningLed(*config.iaq_warning_pin, sensor.iaq >= config.iaq_warning_threshold)) {
-                hold_pins = true;
-            }
-        #endif
+        if (SetWarningLed(*config.iaq_warning_pin, sensor_bsec.getIaq() >= config.iaq_warning_threshold)) {
+            hold_pins = true;
+        }
 
         #ifdef CAPABILITIES_CONFIG_REMOTE
             config_remote.Read(config.config_url);
@@ -140,10 +130,10 @@ void loop()
             gpio_deep_sleep_hold_dis();
         }
 
-        SaveBsecState();
+        sensor_bsec.SaveState();
 
         if (messaging.Connect(config.mqtt_client_id)) {
-            const char* message = GenerateMessage(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
+            const char* message = GenerateMessage(sensor_bsec.getTemperature(), sensor_bsec.getHumidity(), sensor_bsec.getPressure(), sensor_bsec.getIaq(), sensor_bsec.getIaqAccuracy(), plant_moisture);
 
             if (!messaging.Publish(config.mqtt_topic, message)) {
                 storage.LogError("MQTT publish failed.");
@@ -152,8 +142,8 @@ void loop()
             storage.LogError("MQTT connect timeout.");
         }
 
-        uint64_t time_us = ((sensor.nextCall - board.GetTimestamp()) * 1000) - esp_timer_get_time();
-        LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000, sensor.nextCall);
+        uint64_t time_us = ((sensor_bsec.getNextCall() - board.GetTimestamp()) * 1000) - esp_timer_get_time();
+        LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000, sensor_bsec.getNextCall());
         board.DeepSleepRaw(time_us);
     }
 }
