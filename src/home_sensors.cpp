@@ -16,10 +16,6 @@
     #include "sensor_moisture.h"
 #endif
 
-#ifdef CAPABILITIES_DISPLAY
-    #include "display.h"
-#endif
-
 bool SetWarningLed(uint16_t pin_address, bool show_warning)
 {
     pinMode(pin_address, OUTPUT);
@@ -93,10 +89,6 @@ void setup()
     #ifdef CAPABILITIES_MOISTURE_SENSOR
         SetupMoistureSensor();
     #endif
-
-    #ifdef CAPABILITIES_DISPLAY
-        SetupDisplay();
-    #endif
 }
 
 void loop()
@@ -141,10 +133,6 @@ void loop()
         }
 
         SaveBsecState();
-
-        #ifdef CAPABILITIES_DISPLAY
-            DisplayData(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
-        #endif
 
         if (ConnectMQTT(config.mqtt_client_id)) {
             const char* message = GenerateMessage(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);

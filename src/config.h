@@ -12,9 +12,7 @@
 
     // #define BSEC_DUNP_STATE
 
-    #if SENSOR_LOCATION == 0
-        // #define CAPABILITIES_DISPLAY
-    #elif SENSOR_LOCATION == 1
+    #if SENSOR_LOCATION == 1
         #define CAPABILITIES_MOISTURE_SENSOR
     #endif
 
@@ -34,10 +32,6 @@
             const char       *mqtt_location           = "Master Bedroom";
             const char       *mqtt_client_id          = "mqtt_client_bedroom_master";
             const char       *mqtt_topic              = "sensors/bedroom_master";
-        #endif
-
-        #ifdef CAPABILITIES_DISPLAY
-            const uint8_t    ssd1306_i2c_addr        = 0x3C;
         #endif
 
         #ifdef CAPABILITIES_SD
