@@ -21,7 +21,7 @@ const uint8_t bsec_config_iaq[] = {
 #include "MAD_ESP32.h"
 
 #ifdef CAPABILITIES_SD
-    #include "logging.h"
+    #include "storage.h"
 #endif
 
 RTC_DATA_ATTR uint8_t sensor_state[BSEC_MAX_STATE_BLOB_SIZE] = {0};
@@ -96,7 +96,7 @@ void SetupBsec()
         LOGLNT("Saved state missing!");
 
         #ifdef CAPABILITIES_SD
-            if (DataRead(BSEC_MAX_STATE_BLOB_SIZE, sensor_state)) {
+            if (storage.ConfigRead(BSEC_MAX_STATE_BLOB_SIZE, sensor_state)) {
                 #ifdef BSEC_DUNP_STATE
                     DumpState("retrieveStateSD", sensor_state);
                 #endif
@@ -104,8 +104,8 @@ void SetupBsec()
 
                 if (!CheckSensor()) {
                     #ifdef CAPABILITIES_SD
-                        DataDelete();
-                        LogError("Invalid BSEC data. Deleted.");
+                        storage.ConfigDelete();
+                        storage.LogError("Invalid BSEC data. Deleted.");
                     #endif
 
                     board.DeepSleep(10);
@@ -151,7 +151,7 @@ void SaveBsecState()
     LOGLNT("Saved state to RTC memory at %lld", sensor_state_time);
 
     #ifdef CAPABILITIES_SD
-        DataWrite(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
+        storage.ConfigWrite(BSEC_MAX_STATE_BLOB_SIZE, sensor_state);
         LOGLNT("Saved state to file.");
     #endif
 

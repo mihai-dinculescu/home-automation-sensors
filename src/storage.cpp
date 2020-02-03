@@ -4,9 +4,11 @@
 #include "MAD_ESP32.h"
 
 #ifdef CAPABILITIES_SD
-    #include "logging.h"
+    #include "storage.h"
 
-    void SetupSD()
+    Storage storage;
+
+    void Storage::Setup()
     {
         LOGT("Initializing SD card.");
 
@@ -34,13 +36,13 @@
         LOGLN(" DONE.");
     }
 
-    void LogError(const char *message)
+    void Storage::LogError(const char *message)
     {
         File sd_file;
-        sd_file = SD.open("/logs/restart.txt", FILE_APPEND);
+        sd_file = SD.open("/logs/errors.txt", FILE_APPEND);
 
         if (sd_file) {
-            LOGT("Writing to /logs/restart.txt.");
+            LOGT("Writing to /logs/errors.txt.");
             sd_file.printf("%09llu: %s\n", board.GetTimestamp(), message);
             sd_file.flush();
             sd_file.close();
@@ -51,7 +53,7 @@
         }
     }
 
-    void DataWrite(const uint16_t len, const uint8_t *state)
+    void Storage::ConfigWrite(const uint16_t len, const uint8_t *state)
     {
         File sd_file;
         sd_file = SD.open("/data/data.txt", FILE_WRITE);
@@ -69,7 +71,7 @@
         }
     }
 
-    bool DataRead(const uint16_t len, uint8_t *state)
+    bool Storage::ConfigRead(const uint16_t len, uint8_t *state)
     {
         File sd_file;
 
@@ -98,7 +100,7 @@
         return true;
     }
 
-    void DataDelete()
+    void Storage::ConfigDelete()
     {
         if (!SD.exists("/data/data.txt")) {
             return;

@@ -9,7 +9,7 @@
 #include "sensor_bsec.h"
 
 #ifdef CAPABILITIES_SD
-    #include "logging.h"
+    #include "storage.h"
 #endif
 
 #ifdef CAPABILITIES_MOISTURE_SENSOR
@@ -35,7 +35,7 @@ void LogErrorAndSleep(const char *message)
     LOGLN(" RESTARTING.");
 
     #ifdef CAPABILITIES_SD
-        LogError(message);
+        storage.LogError(message);
     #endif
 
     Serial.flush();
@@ -72,7 +72,7 @@ void setup()
     Serial.begin(115200);
 
     #ifdef CAPABILITIES_SD
-        SetupSD();
+        storage.Setup();
     #endif
 
     if (!board.SetupWifi(config.wifi_ssid, config.wifi_password)) {
@@ -138,10 +138,10 @@ void loop()
             const char* message = GenerateMessage(sensor.temperature, sensor.humidity, sensor.pressure, sensor.iaq, sensor.iaqAccuracy, plant_moisture);
 
             if (!messaging.Publish(config.mqtt_topic, message)) {
-                LogError("MQTT publish failed.");
+                storage.LogError("MQTT publish failed.");
             }
         } else {
-            LogError("MQTT connect timeout.");
+            storage.LogError("MQTT connect timeout.");
         }
 
         uint64_t time_us = ((sensor.nextCall - board.GetTimestamp()) * 1000) - esp_timer_get_time();
