@@ -102,7 +102,7 @@ void loop()
 
         bool hold_pins = false;
 
-        if (SetWarningLed(*config.iaq_warning_pin, sensor_bsec.getIaq() >= config.iaq_warning_threshold)) {
+        if (SetWarningLed(*config.iaq_warning_pin, sensor_bsec.getStaticIaq() >= config.iaq_warning_threshold)) {
             hold_pins = true;
         }
 
@@ -133,7 +133,7 @@ void loop()
         sensor_bsec.SaveState();
 
         if (messaging.Connect(config.mqtt_client_id)) {
-            const char* message = GenerateMessage(sensor_bsec.getTemperature(), sensor_bsec.getHumidity(), sensor_bsec.getPressure(), sensor_bsec.getIaq(), sensor_bsec.getIaqAccuracy(), plant_moisture);
+            const char* message = GenerateMessage(sensor_bsec.getTemperature(), sensor_bsec.getHumidity(), sensor_bsec.getPressure(), sensor_bsec.getStaticIaq(), sensor_bsec.getStaticIaqAccuracy(), plant_moisture);
 
             if (!messaging.Publish(config.mqtt_topic, message)) {
                 storage.LogError("MQTT publish failed.");
