@@ -1,9 +1,9 @@
-#ifndef SENSOR_MOISTURE_H
-    #define SENSOR_MOISTURE_H
+#ifndef SENSOR_SOIL_STEMMA_H
+    #define SENSOR_SOIL_STEMMA_H
 
     #include <Adafruit_seesaw.h>
 
-    class SensorMoisture
+    class SensorSoilStemma
     {
         Adafruit_seesaw _seesaw_soil;
 
@@ -12,5 +12,5 @@
             uint16_t Read();
     };
 
-    extern SensorMoisture sensor_moisture;
+    extern SensorSoilStemma sensor_soil_stemma;
 #endif

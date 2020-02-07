@@ -8,6 +8,7 @@
         const uint16_t LED_ERROR = 13;
         const uint16_t A0 = 26;
         const uint16_t A1 = 25;
+        const uint16_t A2 = 34;
         const uint16_t P21 = 21;
         const uint16_t I2C_SDA = 23;
         const uint16_t I2C_SCL = 22;

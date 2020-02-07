@@ -13,8 +13,10 @@
     #include "config_remote.h"
 #endif
 
-#ifdef CAPABILITIES_MOISTURE_SENSOR
-    #include "sensor_moisture.h"
+#if CAPABILITIES_MOISTURE_SENSOR == 'S'
+    #include "sensor_soil_stemma.h"
+#elif CAPABILITIES_MOISTURE_SENSOR == 'G'
+    #include "sensor_soil_gravity.h"
 #endif
 
 bool SetWarningLed(uint16_t pin_address, bool show_warning)
@@ -29,6 +31,13 @@ bool SetWarningLed(uint16_t pin_address, bool show_warning)
         gpio_hold_dis((gpio_num_t)pin_address);
         return false;
     }
+}
+
+void HandleFatalError(const char *message)
+{
+    LOGLNT("%s", message);
+    storage.LogError(message);
+    board.FatalError();
 }
 
 void LogErrorAndSleep(const char *message)
@@ -82,8 +91,14 @@ void setup()
     sensor_bsec.Setup();
     messaging.Setup(config.mqtt_broker);
 
-    #ifdef CAPABILITIES_MOISTURE_SENSOR
-        sensor_moisture.Setup(config.seesaw_soil_i2c_addr);
+    #if CAPABILITIES_MOISTURE_SENSOR == 'S'
+        sensor_soil_stemma.Setup(config.seesaw_soil_i2c_addr);
+    #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
+        if (sensor_soil_gravity.Setup(*config.gravity_soil_analog_addr)) {
+            LOGLNT("Gravity Soil init done.");
+        } else {
+            HandleFatalError("Gravity Soil init failed!");
+        }
     #endif
 }
 
@@ -107,21 +122,26 @@ void loop()
         }
 
         #ifdef CAPABILITIES_CONFIG_REMOTE
-            config_remote.Read(config.config_url);
         #endif
 
         uint16_t plant_moisture = 0;
-        #ifdef CAPABILITIES_MOISTURE_SENSOR
-            plant_moisture = sensor_moisture.Read();
-            LOGLNT("Plant moisture %d", plant_moisture);
 
-            #ifdef CAPABILITIES_CONFIG_REMOTE
-                LOGLNT("Plant moisture threshold %d", config_remote.GetField1());
+        #if CAPABILITIES_MOISTURE_SENSOR == 'S'
+            plant_moisture = sensor_soil_stemma.Read();
+            LOGLNT("Plant moisture (STEMMA) %d", plant_moisture);
+        #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
+            plant_moisture = sensor_soil_gravity.Read();
+            LOGLNT("Plant moisture (Gravity) %d", plant_moisture);
+        #endif
 
-                if (SetWarningLed(*config.moisture_warning_pin, plant_moisture <= config_remote.GetField1())) {
-                    hold_pins = true;
-                }
-            #endif
+        #if defined(CAPABILITIES_CONFIG_REMOTE) && defined(CAPABILITIES_MOISTURE_SENSOR)
+            config_remote.Read(config.config_url);
+
+            LOGLNT("Plant moisture threshold %d", config_remote.GetField1());
+
+            if (SetWarningLed(*config.moisture_warning_pin, plant_moisture <= config_remote.GetField1())) {
+                hold_pins = true;
+            }
         #endif
 
         if (hold_pins) {
