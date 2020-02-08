@@ -125,6 +125,7 @@ void SensorBsec::Setup()
     };
 
     _sensor.updateSubscription(sensor_list, sizeof(sensor_list) / sizeof(sensor_list[0]), BSEC_SAMPLE_RATE_ULP);
+
     if (!CheckSensor()) {
         LOGLNT("Failed to update subscription!");
         board.FatalError();
@@ -200,6 +201,26 @@ float SensorBsec::getStaticIaq()
 uint16_t SensorBsec::getStaticIaqAccuracy()
 {
     return _sensor.staticIaqAccuracy;
+}
+
+float SensorBsec::getBreathVocEquivalent()
+{
+    return _sensor.breathVocEquivalent;
+}
+
+uint16_t SensorBsec::getBreathVocAccuracy()
+{
+    return _sensor.breathVocAccuracy;
+}
+
+float SensorBsec::getCo2Equivalent()
+{
+    return _sensor.co2Equivalent;
+}
+
+uint16_t SensorBsec::getCo2Accuracy()
+{
+    return _sensor.co2Accuracy;
 }
 
 float SensorBsec::getGasResistance()

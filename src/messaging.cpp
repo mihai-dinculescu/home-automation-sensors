@@ -1,7 +1,7 @@
 #include "messaging.h"
 #include "MAD_ESP32.h"
 
-Messaging messaging(256);
+Messaging messaging(512);
 
 void Messaging::Setup(const char *mqtt_broker)
 {

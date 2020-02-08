@@ -49,17 +49,20 @@ void LogErrorAndSleep(const char *message)
     board.DeepSleep(10);
 }
 
-const char* GenerateMessage(float temperature, float humidity, float pressure, float iaq_estimate, uint16_t iaq_accuracy, uint16_t plant_moisture)
+const char* GenerateMessage(uint16_t plant_moisture)
 {
     std::ostringstream messageStream;
 
     messageStream << "{";
     messageStream << "\"location\":\"" << config.mqtt_location << "\"";
-    messageStream << ",\"temperature\":" << temperature;
-    messageStream << ",\"humidity\":" << humidity;
-    messageStream << ",\"pressure\":" << pressure / 100; // hPa
-    messageStream << ",\"iaq_estimate\":" << iaq_estimate;
-    messageStream << ",\"iaq_accuracy\":" << iaq_accuracy;
+    messageStream << ",\"temperature\":" << sensor_bsec.getTemperature();
+    messageStream << ",\"humidity\":" << sensor_bsec.getHumidity();
+    messageStream << ",\"pressure\":" << sensor_bsec.getPressure() / 100; // hPa
+    messageStream << ",\"iaq\":" << sensor_bsec.getIaq();
+    messageStream << ",\"iaq_accuracy\":" << sensor_bsec.getIaqAccuracy();
+    messageStream << ",\"static_iaq\":" << sensor_bsec.getStaticIaq();
+    messageStream << ",\"bvoc_equivalent\":" << sensor_bsec.getBreathVocEquivalent();
+    messageStream << ",\"co2_equivalent\":" << sensor_bsec.getCo2Equivalent();
 
     #ifdef CAPABILITIES_MOISTURE_SENSOR
         messageStream << ",\"plant_moisture\":" << plant_moisture;
@@ -109,15 +112,17 @@ void loop()
 
     if (sensor_bsec.Run(board.GetTimestamp())) {
         LOGLNT("Temperature raw %.2f compensated %.2f", sensor_bsec.getRawTemperature(), sensor_bsec.getTemperature());
-        LOGLNT("Humidity raw %.2f compensated %.2f", sensor_bsec.getRawHumidity(), sensor_bsec.getHumidity());
+        LOGLNT("Humidity raw %.2f %% compensated %.2f %%", sensor_bsec.getRawHumidity(), sensor_bsec.getHumidity());
         LOGLNT("Pressure %.2f kPa", sensor_bsec.getPressure() / 1000);
         LOGLNT("IAQ %.0f accuracy %d", sensor_bsec.getIaq(), sensor_bsec.getIaqAccuracy());
         LOGLNT("Static IAQ %.0f accuracy %d", sensor_bsec.getStaticIaq(), sensor_bsec.getStaticIaqAccuracy());
+        LOGLNT("Breath VOC ppm %.0f accuracy %d", sensor_bsec.getBreathVocEquivalent(), sensor_bsec.getBreathVocAccuracy());
+        LOGLNT("CO2 %.0f ppm accuracy %d", sensor_bsec.getCo2Equivalent(), sensor_bsec.getCo2Accuracy());
         LOGLNT("Gas resistance %.2f kOhm", sensor_bsec.getGasResistance() / 1000);
 
         bool hold_pins = false;
 
-        if (SetWarningLed(*config.iaq_warning_pin, sensor_bsec.getStaticIaq() >= config.iaq_warning_threshold)) {
+        if (SetWarningLed(*config.iaq_warning_pin, sensor_bsec.getIaq() >= config.iaq_warning_threshold)) {
             hold_pins = true;
         }
 
@@ -153,7 +158,7 @@ void loop()
         sensor_bsec.SaveState();
 
         if (messaging.Connect(config.mqtt_client_id)) {
-            const char* message = GenerateMessage(sensor_bsec.getTemperature(), sensor_bsec.getHumidity(), sensor_bsec.getPressure(), sensor_bsec.getStaticIaq(), sensor_bsec.getStaticIaqAccuracy(), plant_moisture);
+            const char* message = GenerateMessage(plant_moisture);
 
             if (!messaging.Publish(config.mqtt_topic, message)) {
                 storage.LogError("MQTT publish failed.");

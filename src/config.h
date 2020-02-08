@@ -36,7 +36,7 @@
 
         const uint16_t       *sd_chip_select           = &board.pins.P21;
 
-        const uint16_t       iaq_warning_threshold     = 101;
+        const uint16_t       iaq_warning_threshold     = 151;
         const uint16_t       *iaq_warning_pin          = &board.pins.A1;
 
         #ifdef CAPABILITIES_MOISTURE_SENSOR
