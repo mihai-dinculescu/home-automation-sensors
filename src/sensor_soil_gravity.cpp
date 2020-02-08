@@ -7,16 +7,21 @@ bool SensorSoilGravity::Setup(const uint8_t addr)
 {
     _analog_addr = addr;
 
-    // first read is funny, ignore it
-    Read();
-    delay(500);
-
-    return Read() < 4095;
+    // should be 4095 but there can be noise in the wire
+    return Read() < 3500;
 }
 
 uint16_t SensorSoilGravity::Read()
 {
+    uint16_t samples = 128;
+    uint64_t accumulator = 0;
+
+    for (uint16_t i = 0; i < samples; i++) {
+        delay(1);
+        accumulator += analogRead(_analog_addr);
+    }
+
     // the sensor gives the dryness measure
     // substract it from the max value so that we get the moisture measure
-    return 4095 - analogRead(_analog_addr);
+    return 4095 - accumulator / samples;
 }
