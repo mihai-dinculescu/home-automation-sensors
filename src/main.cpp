@@ -16,7 +16,8 @@
 #if CAPABILITIES_MOISTURE_SENSOR == 'S'
     #include "sensor_soil_stemma.h"
 #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
-    #include "sensor_soil_gravity.h"
+    #include <gravity_soil_moisture_sensor.h>
+    GravitySoilMoistureSensor gravity_sensor;
 #endif
 
 bool SetWarningLed(uint16_t pin_address, bool show_warning)
@@ -97,7 +98,7 @@ void setup()
     #if CAPABILITIES_MOISTURE_SENSOR == 'S'
         sensor_soil_stemma.Setup(config.seesaw_soil_i2c_addr);
     #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
-        if (sensor_soil_gravity.Setup(*config.gravity_soil_analog_addr)) {
+        if (gravity_sensor.Setup(*config.gravity_soil_analog_addr)) {
             LOGLNT("Gravity Soil init done.");
         } else {
             HandleFatalError("Gravity Soil init failed!");
@@ -135,7 +136,7 @@ void loop()
             plant_moisture = sensor_soil_stemma.Read();
             LOGLNT("Plant moisture (STEMMA) %d", plant_moisture);
         #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
-            plant_moisture = sensor_soil_gravity.Read();
+            plant_moisture = gravity_sensor.Read();
             LOGLNT("Plant moisture (Gravity) %d", plant_moisture);
         #endif
 
