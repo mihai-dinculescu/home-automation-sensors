@@ -168,6 +168,8 @@ void loop()
             storage.LogError("MQTT connect timeout.");
         }
 
+        storage.End();
+
         uint64_t time_us = ((sensor_bsec.getNextCall() - board.GetTimestamp()) * 1000) - esp_timer_get_time();
         LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000, sensor_bsec.getNextCall());
         board.DeepSleepRaw(time_us);

@@ -7,20 +7,30 @@
 
 Storage storage;
 
+void HandleStorageError()
+{
+    // blink for 10 seconds
+    for (uint16_t i = 0; i < 50; i++) {
+        board.BlinkErrorLed(100);
+    }
+
+    board.Restart();
+}
+
 void Storage::Setup()
 {
-    LOGT("Initializing SD card.");
+    LOGLNT("Initializing SD Card...");
 
     pinMode(*config.sd_chip_select, OUTPUT);
 
     digitalWrite(*config.sd_chip_select, HIGH);
 
     uint64_t time_ms = millis();
-    if (!SD.begin(*config.sd_chip_select)) {
+    while (!SD.begin(*config.sd_chip_select)) {
         if (millis() >= time_ms + 10 * 1000) {
-            board.FatalError();
+            LOGLNT("SD Card initialization FAILED!");
+            HandleStorageError();
         }
-        LOG(".");
         delay(500);
     }
 
@@ -32,7 +42,12 @@ void Storage::Setup()
         SD.mkdir("/data");
     }
 
-    LOGLN(" DONE.");
+    LOGLNT("SD Card initialization DONE.");
+}
+
+void Storage::End()
+{
+    SD.end();
 }
 
 void Storage::LogError(const char *message)
@@ -47,8 +62,8 @@ void Storage::LogError(const char *message)
         sd_file.close();
         LOGLN(" DONE.");
     } else {
-        LOGLNT("Failed to write to SD card!");
-        board.FatalError();
+        LOGLNT("Failed to write to SD Card!");
+        HandleStorageError();
     }
 }
 
@@ -65,8 +80,8 @@ void Storage::ConfigWrite(const uint16_t len, const uint8_t *state)
         sd_file.flush();
         sd_file.close();
     } else {
-        LOGLNT("Failed to write to SD card!");
-        board.FatalError();
+        LOGLNT("Failed to write to SD Card!");
+        HandleStorageError();
     }
 }
 

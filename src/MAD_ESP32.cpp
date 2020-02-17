@@ -64,7 +64,7 @@ void Board::BlinkErrorLed(uint16_t interval)
 void Board::FatalError()
 {
     while(true) {
-        BlinkErrorLed(100);
+        BlinkErrorLed();
     }
 }
 
@@ -80,6 +80,11 @@ void Board::DeepSleepRaw(uint64_t time_us)
 {
     esp_sleep_enable_timer_wakeup(time_us);
     esp_deep_sleep_start();
+}
+
+void Board::Restart()
+{
+    ESP.restart();
 }
 
 Board board;

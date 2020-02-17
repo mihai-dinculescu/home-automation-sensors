@@ -22,12 +22,12 @@
             bool SetupWifi(const char *ssid, const char *password);
             bool SetupTime();
             int64_t GetTimestamp();
+            void BlinkErrorLed(uint16_t interval = 500);
             void FatalError();
             void DeepSleep(uint16_t seconds);
             void DeepSleepRaw(uint64_t time_us);
-
+            void Restart();
         private:
-            void BlinkErrorLed(uint16_t interval);
     };
 
     extern Board board;
