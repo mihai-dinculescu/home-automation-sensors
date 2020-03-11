@@ -18,6 +18,8 @@
 #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
     #include <gravity_soil_moisture_sensor.h>
     GravitySoilMoistureSensor gravity_sensor;
+#elif CAPABILITIES_MOISTURE_SENSOR == 'C'
+    #include "sensor_soil_catnip.h"
 #endif
 
 bool SetWarningLed(uint16_t pin_address, bool show_warning)
@@ -103,6 +105,12 @@ void setup()
         } else {
             HandleFatalError("Gravity Soil init failed!");
         }
+    #elif CAPABILITIES_MOISTURE_SENSOR == 'C'
+        if (sensor_soil_catnip.Setup()) {
+            LOGLNT("Catnip Soil init done.");
+        } else {
+            HandleFatalError("Catnip Soil init failed!");
+        }
     #endif
 }
 
@@ -138,6 +146,9 @@ void loop()
         #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
             plant_moisture = gravity_sensor.Read();
             LOGLNT("Plant moisture (Gravity) %d", plant_moisture);
+        #elif CAPABILITIES_MOISTURE_SENSOR == 'C'
+            plant_moisture = sensor_soil_catnip.Read();
+            LOGLNT("Plant moisture (Catnip) %d", plant_moisture);
         #endif
 
         #if defined(CAPABILITIES_CONFIG_REMOTE) && defined(CAPABILITIES_MOISTURE_SENSOR)

@@ -8,14 +8,15 @@
 
     // 0 - Living Room
     // 1 - Master Bedroom
-    #define SENSOR_LOCATION 0
+    #define SENSOR_LOCATION 1
 
     // #define BSEC_DUNP_STATE
 
     #if SENSOR_LOCATION == 1
         // S = STEMMA
         // G = GRAVITY
-        #define CAPABILITIES_MOISTURE_SENSOR 'G'
+        // C = CATNIP
+        #define CAPABILITIES_MOISTURE_SENSOR 'C'
         #define CAPABILITIES_CONFIG_REMOTE
     #endif
 
