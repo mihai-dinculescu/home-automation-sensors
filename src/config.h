@@ -13,10 +13,7 @@
     // #define BSEC_DUNP_STATE
 
     #if SENSOR_LOCATION == 1
-        // S = STEMMA
-        // G = GRAVITY
-        // C = CATNIP
-        #define CAPABILITIES_MOISTURE_SENSOR 'C'
+        #define CAPABILITIES_MOISTURE_SENSOR
         #define CAPABILITIES_CONFIG_REMOTE
     #endif
 
@@ -42,12 +39,6 @@
 
         #ifdef CAPABILITIES_MOISTURE_SENSOR
             const uint16_t   *moisture_warning_pin     = &board.pins.A0;
-        #endif
-
-        #if CAPABILITIES_MOISTURE_SENSOR == 'S'
-            const uint8_t    seesaw_soil_i2c_addr      = 0x36;
-        #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
-            const uint16_t   *gravity_soil_analog_addr = &board.pins.A2;
         #endif
 
         #ifdef CAPABILITIES_CONFIG_REMOTE

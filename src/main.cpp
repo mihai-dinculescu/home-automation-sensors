@@ -13,12 +13,7 @@
     #include "config_remote.h"
 #endif
 
-#if CAPABILITIES_MOISTURE_SENSOR == 'S'
-    #include "sensor_soil_stemma.h"
-#elif CAPABILITIES_MOISTURE_SENSOR == 'G'
-    #include <gravity_soil_moisture_sensor.h>
-    GravitySoilMoistureSensor gravity_sensor;
-#elif CAPABILITIES_MOISTURE_SENSOR == 'C'
+#ifdef CAPABILITIES_MOISTURE_SENSOR
     #include "sensor_soil_catnip.h"
 #endif
 
@@ -97,15 +92,7 @@ void setup()
     sensor_bsec.Setup();
     messaging.Setup(config.mqtt_broker);
 
-    #if CAPABILITIES_MOISTURE_SENSOR == 'S'
-        sensor_soil_stemma.Setup(config.seesaw_soil_i2c_addr);
-    #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
-        if (gravity_sensor.Setup(*config.gravity_soil_analog_addr)) {
-            LOGLNT("Gravity Soil init done.");
-        } else {
-            HandleFatalError("Gravity Soil init failed!");
-        }
-    #elif CAPABILITIES_MOISTURE_SENSOR == 'C'
+    #ifdef CAPABILITIES_MOISTURE_SENSOR
         if (sensor_soil_catnip.Setup()) {
             LOGLNT("Catnip Soil init done.");
         } else {
@@ -140,13 +127,7 @@ void loop()
 
         uint16_t plant_moisture = 0;
 
-        #if CAPABILITIES_MOISTURE_SENSOR == 'S'
-            plant_moisture = sensor_soil_stemma.Read();
-            LOGLNT("Plant moisture (STEMMA) %d", plant_moisture);
-        #elif CAPABILITIES_MOISTURE_SENSOR == 'G'
-            plant_moisture = gravity_sensor.Read();
-            LOGLNT("Plant moisture (Gravity) %d", plant_moisture);
-        #elif CAPABILITIES_MOISTURE_SENSOR == 'C'
+        #ifdef CAPABILITIES_MOISTURE_SENSOR
             plant_moisture = sensor_soil_catnip.Read();
             LOGLNT("Plant moisture (Catnip) %d", plant_moisture);
         #endif
