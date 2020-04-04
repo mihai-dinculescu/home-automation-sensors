@@ -3,6 +3,13 @@
 
     class Storage
     {
+        const char *data_folder         = "/data";
+        const char *data_file           = "/data/data.txt";
+        const char *logs_folder         = "/logs";
+        const char *errors_file         = "/logs/errors.txt";
+        const char *errors__file_backup = "/logs/errors_backup.txt";
+        const uint32_t logs_file_limit  = 1024 * 32;
+
         public:
             void Setup();
             void End();

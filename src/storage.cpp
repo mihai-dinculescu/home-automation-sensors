@@ -34,12 +34,27 @@ void Storage::Setup()
         delay(500);
     }
 
-    if (!SD.exists("/logs")) {
-        SD.mkdir("/logs");
+    if (!SD.exists(logs_folder)) {
+        SD.mkdir(logs_folder);
     }
 
-    if (!SD.exists("/data")) {
-        SD.mkdir("/data");
+    if (!SD.exists(data_folder)) {
+        SD.mkdir(data_folder);
+    }
+
+    if (SD.exists(errors_file)) {
+        File sd_file;
+        sd_file = SD.open(errors_file, FILE_READ);
+        size_t file_size = sd_file.size();
+        sd_file.close();
+
+        if (file_size > logs_file_limit) {
+            if (SD.exists(errors__file_backup)) {
+                SD.remove(errors__file_backup);
+            }
+
+            SD.rename(errors_file, errors__file_backup);
+        }
     }
 
     LOGLNT("SD Card initialization DONE.");
@@ -53,10 +68,10 @@ void Storage::End()
 void Storage::LogError(const char *message)
 {
     File sd_file;
-    sd_file = SD.open("/logs/errors.txt", FILE_APPEND);
+    sd_file = SD.open(errors_file, FILE_APPEND);
 
     if (sd_file) {
-        LOGT("Writing to /logs/errors.txt.");
+        LOGT("Writing to %s.", errors_file);
         sd_file.printf("%09llu: %s\n", board.GetTimestamp(), message);
         sd_file.flush();
         sd_file.close();
@@ -70,7 +85,7 @@ void Storage::LogError(const char *message)
 void Storage::ConfigWrite(const uint16_t len, const uint8_t *state)
 {
     File sd_file;
-    sd_file = SD.open("/data/data.txt", FILE_WRITE);
+    sd_file = SD.open(data_file, FILE_WRITE);
 
     if (sd_file) {
         for (int i = 0; i < len; i++) {
@@ -89,11 +104,11 @@ bool Storage::ConfigRead(const uint16_t len, uint8_t *state)
 {
     File sd_file;
 
-    if (!SD.exists("/data/data.txt")) {
+    if (!SD.exists(data_file)) {
         return false;
     }
 
-    sd_file = SD.open("/data/data.txt", FILE_READ);
+    sd_file = SD.open(data_file, FILE_READ);
 
     if (sd_file) {
         for (int i = 0; i < len; i++) {
@@ -116,9 +131,9 @@ bool Storage::ConfigRead(const uint16_t len, uint8_t *state)
 
 void Storage::ConfigDelete()
 {
-    if (!SD.exists("/data/data.txt")) {
+    if (!SD.exists(data_file)) {
         return;
     }
 
-    SD.remove("/data/data.txt");
+    SD.remove(data_file);
 }
