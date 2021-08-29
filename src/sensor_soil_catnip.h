@@ -1,16 +1,16 @@
 #ifndef SENSOR_SOIL_CATNIP_H
-    #define SENSOR_SOIL_CATNIP_H
+#define SENSOR_SOIL_CATNIP_H
 
-    #include <I2CSoilMoistureSensor.h>
+#include <I2CSoilMoistureSensor.h>
 
-    class SensorSoilCatnip
-    {
-        I2CSoilMoistureSensor _sensor;
+class SensorSoilCatnip
+{
+    I2CSoilMoistureSensor _sensor;
 
-        public:
-            bool Setup();
-            uint16_t Read();
-    };
+public:
+    bool Setup();
+    uint16_t Read();
+};
 
-    extern SensorSoilCatnip sensor_soil_catnip;
+extern SensorSoilCatnip sensor_soil_catnip;
 #endif

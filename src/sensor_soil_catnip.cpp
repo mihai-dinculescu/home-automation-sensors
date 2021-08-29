@@ -10,7 +10,8 @@ bool SensorSoilCatnip::Setup()
     _sensor.begin();
     delay(1000); // give some time to boot up
 
-    if (Read() == 65535) {
+    if (Read() == 65535)
+    {
         return false;
     }
 
@@ -19,8 +20,9 @@ bool SensorSoilCatnip::Setup()
 
 uint16_t SensorSoilCatnip::Read()
 {
-    while (_sensor.isBusy()) {
-         delay(50);
+    while (_sensor.isBusy())
+    {
+        delay(50);
     }
 
     uint16_t value = _sensor.getCapacitance();

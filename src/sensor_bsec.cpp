@@ -26,32 +26,41 @@ SensorBsec sensor_bsec;
 RTC_DATA_ATTR uint8_t _sensor_state[BSEC_MAX_STATE_BLOB_SIZE] = {0};
 RTC_DATA_ATTR int64_t _sensor_state_time = 0;
 
-bool SensorBsec::CheckSensor() {
-    if (_sensor.status < BSEC_OK) {
+bool SensorBsec::CheckSensor()
+{
+    if (_sensor.status < BSEC_OK)
+    {
         LOGLNT("BSEC error, status %d!", _sensor.status);
         return false;
-    } else if (_sensor.status > BSEC_OK) {
+    }
+    else if (_sensor.status > BSEC_OK)
+    {
         LOGLNT("BSEC warning, status %d!", _sensor.status);
     }
 
-    if (_sensor.bme680Status < BME680_OK) {
+    if (_sensor.bme680Status < BME680_OK)
+    {
         LOGLNT("Sensor error, bme680_status %d!", _sensor.bme680Status);
         return false;
-    } else if (_sensor.bme680Status > BME680_OK) {
+    }
+    else if (_sensor.bme680Status > BME680_OK)
+    {
         LOGLNT("Sensor warning, status %d!", _sensor.bme680Status);
     }
 
     return true;
 }
 
-#ifdef BSEC_DUNP_STATE
+#ifdef BSEC_DUMP_STATE
 void SensorBsec::DumpState(const char *name, const uint8_t *state)
 {
     LOGLNT("%s:", name);
 
-    for (int i = 0; i < BSEC_MAX_STATE_BLOB_SIZE; i++) {
+    for (int i = 0; i < BSEC_MAX_STATE_BLOB_SIZE; i++)
+    {
         LOG("%02x ", state[i]);
-        if (i % 16 == 15) {
+        if (i % 16 == 15)
+        {
             LOG("\n");
         }
     }
@@ -65,7 +74,8 @@ void SensorBsec::Setup()
     Wire.begin(board.pins.I2C_SDA, board.pins.I2C_SCL);
 
     _sensor.begin(BME680_I2C_ADDR_SECONDARY, Wire);
-    if (!CheckSensor()) {
+    if (!CheckSensor())
+    {
         LOGLNT("Failed to init BME680, check wiring!");
         board.FatalError();
     }
@@ -73,40 +83,53 @@ void SensorBsec::Setup()
 
     _sensor.setConfig(_bsec_config_iaq);
 
-    if (!CheckSensor()) {
+    if (!CheckSensor())
+    {
         LOGLNT("Invalid BSEC config!");
         board.FatalError();
     }
 
-    if (_sensor_state_time) {
-        #ifdef BSEC_DUNP_STATE
-            DumpState("retrieveState", _sensor_state);
-        #endif
+    if (_sensor_state_time)
+    {
+#ifdef BSEC_DUMP_STATE
+        DumpState("retrieveState", _sensor_state);
+#endif
         _sensor.setState(_sensor_state);
 
-        if (!CheckSensor()) {
+        if (!CheckSensor())
+        {
             board.FatalError();
-        } else {
+        }
+        else
+        {
             LOGLNT("Successfully set state from %lld.", _sensor_state_time);
         }
-    } else {
+    }
+    else
+    {
         LOGLNT("Saved state missing!");
 
-        if (storage.ConfigRead(BSEC_MAX_STATE_BLOB_SIZE, _sensor_state)) {
-            #ifdef BSEC_DUNP_STATE
-                DumpState("retrieveStateSD", _sensor_state);
-            #endif
+        if (storage.ConfigRead(BSEC_MAX_STATE_BLOB_SIZE, _sensor_state))
+        {
+#ifdef BSEC_DUMP_STATE
+            DumpState("retrieveStateSD", _sensor_state);
+#endif
             _sensor.setState(_sensor_state);
 
-            if (!CheckSensor()) {
+            if (!CheckSensor())
+            {
                 storage.ConfigDelete();
                 storage.LogError("Invalid BSEC data. Deleted.");
 
                 board.DeepSleep(10);
-            } else {
+            }
+            else
+            {
                 LOGLNT("Successfully set state from file.");
             }
-        } else {
+        }
+        else
+        {
             LOGLNT("Saved state SD missing!");
         }
     }
@@ -126,7 +149,8 @@ void SensorBsec::Setup()
 
     _sensor.updateSubscription(sensor_list, sizeof(sensor_list) / sizeof(sensor_list[0]), BSEC_SAMPLE_RATE_ULP);
 
-    if (!CheckSensor()) {
+    if (!CheckSensor())
+    {
         LOGLNT("Failed to update subscription!");
         board.FatalError();
     }
@@ -139,15 +163,16 @@ void SensorBsec::SaveState()
     _sensor_state_time = board.GetTimestamp();
     _sensor.getState(_sensor_state);
 
-    #ifdef BSEC_DUNP_STATE
-        DumpState("saveState", _sensor_state);
-    #endif
+#ifdef BSEC_DUMP_STATE
+    DumpState("saveState", _sensor_state);
+#endif
     LOGLNT("Saved state to RTC memory at %lld", _sensor_state_time);
 
     storage.ConfigWrite(BSEC_MAX_STATE_BLOB_SIZE, _sensor_state);
     LOGLNT("Saved state to file.");
 
-    if (!CheckSensor()) {
+    if (!CheckSensor())
+    {
         LOGLNT("Invalid BSEC config after save state!");
         board.FatalError();
     }

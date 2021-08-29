@@ -14,8 +14,10 @@ bool Messaging::Connect(const char *client_id)
     LOGT("Connecting to MQTT.");
 
     uint64_t time_ms = millis();
-    while (!_client.connect(client_id)) {
-        if (millis() >= time_ms + 10 * 1000) {
+    while (!_client.connect(client_id))
+    {
+        if (millis() >= time_ms + 10 * 1000)
+        {
             return false;
         }
         LOG(".");
@@ -26,7 +28,7 @@ bool Messaging::Connect(const char *client_id)
     return true;
 }
 
-bool Messaging::Publish(const char* mqtt_topic, const char* message)
+bool Messaging::Publish(const char *mqtt_topic, const char *message)
 {
     LOGT("Publishing to MQTT.");
     bool result = _client.publish(mqtt_topic, message, false, 2);

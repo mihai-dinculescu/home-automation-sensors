@@ -15,8 +15,10 @@ bool Board::SetupWifi(const char *ssid, const char *password)
     WiFi.begin(ssid, password);
 
     uint64_t time_ms = millis();
-    while (WiFi.status() != WL_CONNECTED) {
-        if (millis() >= time_ms + 30 * 1000) {
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        if (millis() >= time_ms + 30 * 1000)
+        {
             return false;
         }
         LOG(".");
@@ -34,8 +36,10 @@ bool Board::SetupTime()
 
     LOGT("Getting time.");
     uint16_t retries = 1;
-    while (!getLocalTime(&time_info)) {
-        if (retries >= 3) {
+    while (!getLocalTime(&time_info))
+    {
+        if (retries >= 3)
+        {
             return false;
         }
 
@@ -63,7 +67,8 @@ void Board::BlinkErrorLed(uint16_t interval)
 
 void Board::FatalError()
 {
-    while(true) {
+    while (true)
+    {
         BlinkErrorLed();
     }
 }
