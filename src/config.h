@@ -6,13 +6,14 @@
 #include "config_secrets.h"
 #include "MAD_ESP32.h"
 
-// 0 - Living Room
-// 1 - Master Bedroom
-#define SENSOR_LOCATION 0
-
 // #define BSEC_DUMP_STATE
 
-#if SENSOR_LOCATION == 1
+// 0 - Master Bedroom
+// 1 - Living Room
+// 2 - Office
+#define SENSOR_LOCATION 2
+
+#if SENSOR_LOCATION == 0
 #define CAPABILITIES_MOISTURE_SENSOR
 #define CAPABILITIES_CONFIG_REMOTE
 #endif
@@ -24,13 +25,17 @@ struct Config
     const char *mqtt_broker = "192.168.1.100";
 
 #if SENSOR_LOCATION == 0
-    const char *mqtt_location = "Living Room";
-    const char *mqtt_client_id = "mqtt_client_living_room";
-    const char *mqtt_topic = "sensors/living_room";
-#elif SENSOR_LOCATION == 1
     const char *mqtt_location = "Master Bedroom";
     const char *mqtt_client_id = "mqtt_client_bedroom_master";
     const char *mqtt_topic = "sensors/bedroom_master";
+#elif SENSOR_LOCATION == 1
+    const char *mqtt_location = "Living Room";
+    const char *mqtt_client_id = "mqtt_client_living_room";
+    const char *mqtt_topic = "sensors/living_room";
+#elif SENSOR_LOCATION == 2
+    const char *mqtt_location = "Office";
+    const char *mqtt_client_id = "mqtt_client_office";
+    const char *mqtt_topic = "sensors/office";
 #endif
 
     const uint16_t *sd_chip_select = &board.pins.P21;
