@@ -105,7 +105,7 @@ void setup()
     }
     else
     {
-        HandleFatalError("Catnip Soil init failed!");
+        LogErrorAndSleep("Catnip Soil init failed!");
     }
 #endif
 }
