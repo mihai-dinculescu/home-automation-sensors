@@ -11,7 +11,8 @@
 // 0 - Master Bedroom
 // 1 - Living Room
 // 2 - Office
-#define SENSOR_LOCATION 2
+// 3 - Nursery
+#define SENSOR_LOCATION 3
 
 #if SENSOR_LOCATION == 0
 #define CAPABILITIES_MOISTURE_SENSOR
@@ -36,6 +37,10 @@ struct Config
     const char *mqtt_location = "Office";
     const char *mqtt_client_id = "mqtt_client_office";
     const char *mqtt_topic = "sensors/office";
+#elif SENSOR_LOCATION == 3
+    const char *mqtt_location = "Nursery";
+    const char *mqtt_client_id = "mqtt_client_nursery";
+    const char *mqtt_topic = "sensors/nursery";
 #endif
 
     const uint16_t *sd_chip_select = &board.pins.P21;
