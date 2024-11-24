@@ -34,8 +34,8 @@ private:
 
 extern Board board;
 
-#define LOGT(fmt, ...) (Serial.printf("%09llu: " fmt, board.GetTimestamp(), ##__VA_ARGS__))
 #define LOG(fmt, ...) (Serial.printf(fmt, ##__VA_ARGS__))
+#define LOGT(fmt, ...) (Serial.printf("%09llu: " fmt, board.GetTimestamp(), ##__VA_ARGS__))
 
 #define LOGLN(fmt, ...) (Serial.printf(fmt "\n", ##__VA_ARGS__))
 #define LOGLNT(fmt, ...) (Serial.printf("%09llu: " fmt "\n", board.GetTimestamp(), ##__VA_ARGS__))

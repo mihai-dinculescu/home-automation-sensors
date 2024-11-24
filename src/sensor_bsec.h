@@ -1,11 +1,25 @@
 #ifndef SENSOR_BSEC_H
 #define SENSOR_BSEC_H
 
-#include <bsec.h>
+#include <bsec2.h>
 
 class SensorBsec
 {
-    Bsec _sensor;
+    Bsec2 _sensor;
+
+    float _raw_temperature;
+    float _temperature;
+    float _raw_humidity;
+    float _humidity;
+    float _raw_pressure;
+    float _iaq;
+    uint16_t _iaq_accuracy;
+    float _static_iaq;
+    uint16_t _static_iaq_accuracy;
+    float _breath_voc_equivalent;
+    uint16_t _breath_voc_accuracy;
+    float _co2_equivalent;
+    uint16_t _co2_accuracy;
 
     bool CheckSensor();
     void DumpState(const char *name, const uint8_t *state);
@@ -20,7 +34,7 @@ public:
     float getTemperature();
     float getRawHumidity();
     float getHumidity();
-    float getPressure();
+    float getRawPressure();
     float getIaq();
     uint16_t getIaqAccuracy();
     float getStaticIaq();

@@ -14,7 +14,7 @@
 // 3 - Nursery
 #define SENSOR_LOCATION 3
 
-#if SENSOR_LOCATION == 0
+#if SENSOR_LOCATION == 100
 #define CAPABILITIES_MOISTURE_SENSOR
 #define CAPABILITIES_CONFIG_REMOTE
 #endif
@@ -23,7 +23,7 @@ struct Config
 {
     const char *wifi_ssid = config_secrets.wifi_ssid;
     const char *wifi_password = config_secrets.wifi_password;
-    const char *mqtt_broker = "192.168.1.100";
+    const char *mqtt_broker = "192.168.1.211";
 
 #if SENSOR_LOCATION == 0
     const char *mqtt_location = "Master Bedroom";

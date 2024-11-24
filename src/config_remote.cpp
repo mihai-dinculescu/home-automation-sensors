@@ -17,9 +17,7 @@ void ConfigRemote::Read(const char *config_url)
     if (response_code > 0)
     {
         String result = http_client.getString();
-
-        const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(8) + 120 * 3;
-        StaticJsonDocument<capacity> doc;
+        JsonDocument doc;
 
         DeserializationError error = deserializeJson(doc, result);
 

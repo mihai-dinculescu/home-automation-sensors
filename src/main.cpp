@@ -59,7 +59,7 @@ const char *GenerateMessage(uint16_t plant_moisture)
     messageStream << "\"location\":\"" << config.mqtt_location << "\"";
     messageStream << ",\"temperature\":" << sensor_bsec.getTemperature();
     messageStream << ",\"humidity\":" << sensor_bsec.getHumidity();
-    messageStream << ",\"pressure\":" << sensor_bsec.getPressure() / 100; // hPa
+    messageStream << ",\"pressure\":" << sensor_bsec.getRawPressure();
     messageStream << ",\"iaq\":" << sensor_bsec.getIaq();
     messageStream << ",\"iaq_accuracy\":" << sensor_bsec.getIaqAccuracy();
     messageStream << ",\"static_iaq\":" << sensor_bsec.getStaticIaq();
@@ -117,15 +117,6 @@ void loop()
 
     if (sensor_bsec.Run(board.GetTimestamp()))
     {
-        LOGLNT("Temperature raw %.2f compensated %.2f", sensor_bsec.getRawTemperature(), sensor_bsec.getTemperature());
-        LOGLNT("Humidity raw %.2f %% compensated %.2f %%", sensor_bsec.getRawHumidity(), sensor_bsec.getHumidity());
-        LOGLNT("Pressure %.2f kPa", sensor_bsec.getPressure() / 1000);
-        LOGLNT("IAQ %.0f accuracy %d", sensor_bsec.getIaq(), sensor_bsec.getIaqAccuracy());
-        LOGLNT("Static IAQ %.0f accuracy %d", sensor_bsec.getStaticIaq(), sensor_bsec.getStaticIaqAccuracy());
-        LOGLNT("Breath VOC ppm %.0f accuracy %d", sensor_bsec.getBreathVocEquivalent(), sensor_bsec.getBreathVocAccuracy());
-        LOGLNT("CO2 %.0f ppm accuracy %d", sensor_bsec.getCo2Equivalent(), sensor_bsec.getCo2Accuracy());
-        LOGLNT("Gas resistance %.2f kOhm", sensor_bsec.getGasResistance() / 1000);
-
         time_t currentTime = time(NULL);
         struct tm *localTime = localtime(&currentTime);
 
@@ -187,8 +178,8 @@ void loop()
 
         storage.End();
 
-        uint64_t time_us = ((sensor_bsec.getNextCall() - board.GetTimestamp()) * 1000) - esp_timer_get_time();
-        LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000, sensor_bsec.getNextCall());
+        uint64_t time_us = ((sensor_bsec.getNextCall() - board.GetTimestamp()) * 1000LL) - esp_timer_get_time() - 15 * 1000LL * 1000LL;
+        LOGLNT("Deep sleep for %llu ms. BSEC next call at %llu ms.", time_us / 1000LL, sensor_bsec.getNextCall());
         board.DeepSleepRaw(time_us);
     }
 }

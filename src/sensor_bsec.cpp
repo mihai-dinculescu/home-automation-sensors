@@ -18,7 +18,7 @@
     generic_33v_300s_28d
 */
 const uint8_t _bsec_config_iaq[] = {
-#include "config/generic_33v_300s_28d/bsec_iaq.txt"
+#include "config/bme680/bme680_iaq_33v_300s_28d/bsec_iaq.txt"
 };
 
 SensorBsec sensor_bsec;
@@ -30,22 +30,22 @@ bool SensorBsec::CheckSensor()
 {
     if (_sensor.status < BSEC_OK)
     {
-        LOGLNT("BSEC error, status %d!", _sensor.status);
+        LOGLNT("BSEC error code : %s", String(_sensor.status));
         return false;
     }
     else if (_sensor.status > BSEC_OK)
     {
-        LOGLNT("BSEC warning, status %d!", _sensor.status);
+        LOGLNT("BSEC warning code : %s", String(_sensor.status));
     }
 
-    if (_sensor.bme680Status < BME680_OK)
+    if (_sensor.sensor.status < BME68X_OK)
     {
-        LOGLNT("Sensor error, bme680_status %d!", _sensor.bme680Status);
+        LOGLNT("BME68X error code : %s", String(_sensor.sensor.status));
         return false;
     }
-    else if (_sensor.bme680Status > BME680_OK)
+    else if (_sensor.sensor.status > BME68X_OK)
     {
-        LOGLNT("Sensor warning, status %d!", _sensor.bme680Status);
+        LOGLNT("BME68X warning code : %s", String(_sensor.sensor.status));
     }
 
     return true;
@@ -73,7 +73,7 @@ void SensorBsec::Setup()
 {
     Wire.begin(board.pins.I2C_SDA, board.pins.I2C_SCL);
 
-    _sensor.begin(BME680_I2C_ADDR_SECONDARY, Wire);
+    _sensor.begin(BME68X_I2C_ADDR_HIGH, Wire);
     if (!CheckSensor())
     {
         LOGLNT("Failed to init BME680, check wiring!");
@@ -138,7 +138,6 @@ void SensorBsec::Setup()
         BSEC_OUTPUT_RAW_TEMPERATURE,
         BSEC_OUTPUT_RAW_PRESSURE,
         BSEC_OUTPUT_RAW_HUMIDITY,
-        BSEC_OUTPUT_RAW_GAS,
         BSEC_OUTPUT_IAQ,
         BSEC_OUTPUT_STATIC_IAQ,
         BSEC_OUTPUT_CO2_EQUIVALENT,
@@ -180,80 +179,142 @@ void SensorBsec::SaveState()
 
 bool SensorBsec::Run(int64_t timeMilliseconds)
 {
-    return _sensor.run(timeMilliseconds);
+    if (_sensor.run(timeMilliseconds))
+    {
+        const bsecOutputs *outputs = _sensor.getOutputs();
+
+        if (!outputs || !outputs->nOutputs)
+        {
+            return false;
+        }
+
+        Serial.println("BSEC outputs:\n\tTime stamp = " + String((int)(outputs->output[0].time_stamp / INT64_C(1000000))));
+        for (uint8_t i = 0; i < outputs->nOutputs; i++)
+        {
+            const bsecData output = outputs->output[i];
+            switch (output.sensor_id)
+            {
+            case BSEC_OUTPUT_RAW_TEMPERATURE:
+                Serial.println("\tTemperature = " + String(output.signal));
+                _raw_temperature = output.signal;
+                break;
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
+                Serial.println("\tCompensated temperature = " + String(output.signal));
+                _temperature = output.signal;
+                break;
+            case BSEC_OUTPUT_RAW_HUMIDITY:
+                Serial.println("\tHumidity = " + String(output.signal));
+                _raw_humidity = output.signal;
+                break;
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
+                Serial.println("\tCompensated humidity = " + String(output.signal));
+                _humidity = output.signal;
+                break;
+            case BSEC_OUTPUT_RAW_PRESSURE:
+                Serial.println("\tPressure = " + String(output.signal));
+                _raw_pressure = output.signal;
+                break;
+            case BSEC_OUTPUT_IAQ:
+                Serial.println("\tIAQ = " + String(output.signal));
+                Serial.println("\tIAQ accuracy = " + String((int)output.accuracy));
+                _iaq = output.signal;
+                _iaq_accuracy = output.accuracy;
+                break;
+            case BSEC_OUTPUT_STATIC_IAQ:
+                Serial.println("\tStatic IAQ = " + String(output.signal));
+                Serial.println("\tStatic IAQ accuracy = " + String((int)output.accuracy));
+                _static_iaq = output.signal;
+                _static_iaq_accuracy = output.accuracy;
+                break;
+            case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
+                Serial.println("\tbVOC equivalent = " + String(output.signal));
+                Serial.println("\tbVOC accuracy = " + String((int)output.accuracy));
+                _breath_voc_equivalent = output.signal;
+                _breath_voc_accuracy = output.accuracy;
+                break;
+            case BSEC_OUTPUT_CO2_EQUIVALENT:
+                Serial.println("\tCO2 Equivalent = " + String(output.signal));
+                Serial.println("\tCO2 accuracy = " + String((int)output.accuracy));
+                _co2_equivalent = output.signal;
+                _co2_accuracy = output.accuracy;
+                break;
+            default:
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 float SensorBsec::getRawTemperature()
 {
-    return _sensor.rawTemperature;
+    return _raw_temperature;
 }
 
 float SensorBsec::getTemperature()
 {
-    return _sensor.temperature;
+    return _temperature;
 }
 
 float SensorBsec::getRawHumidity()
 {
-    return _sensor.rawHumidity;
+    return _raw_humidity;
 }
 
 float SensorBsec::getHumidity()
 {
-    return _sensor.humidity;
+    return _humidity;
 }
 
-float SensorBsec::getPressure()
+float SensorBsec::getRawPressure()
 {
-    return _sensor.pressure;
+    return _raw_pressure;
 }
 
 float SensorBsec::getIaq()
 {
-    return _sensor.iaq;
+    return _iaq;
 }
 
 uint16_t SensorBsec::getIaqAccuracy()
 {
-    return _sensor.iaqAccuracy;
+    return _iaq_accuracy;
 }
 
 float SensorBsec::getStaticIaq()
 {
-    return _sensor.staticIaq;
+    return _static_iaq;
 }
 
 uint16_t SensorBsec::getStaticIaqAccuracy()
 {
-    return _sensor.staticIaqAccuracy;
+    return _static_iaq_accuracy;
 }
 
 float SensorBsec::getBreathVocEquivalent()
 {
-    return _sensor.breathVocEquivalent;
+    return _breath_voc_equivalent;
 }
 
 uint16_t SensorBsec::getBreathVocAccuracy()
 {
-    return _sensor.breathVocAccuracy;
+    return _breath_voc_accuracy;
 }
 
 float SensorBsec::getCo2Equivalent()
 {
-    return _sensor.co2Equivalent;
+    return _co2_equivalent;
 }
 
 uint16_t SensorBsec::getCo2Accuracy()
 {
-    return _sensor.co2Accuracy;
-}
-
-float SensorBsec::getGasResistance()
-{
-    return _sensor.gasResistance;
+    return _co2_accuracy;
 }
 
 int64_t SensorBsec::getNextCall()
 {
-    return _sensor.nextCall;
+    return _sensor.getNextCall() / 1000;
 }

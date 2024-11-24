@@ -9,16 +9,19 @@
 #include "MAD_ESP32.h"
 #include "config.h"
 
-void test_config() {
-    TEST_ASSERT_EQUAL("192.168.1.100", config.mqtt_broker);
+void test_config()
+{
+    TEST_ASSERT_EQUAL("192.168.1.211", config.mqtt_broker);
     TEST_ASSERT_EQUAL(21, *config.sd_chip_select);
 }
 
-void test_board() {
+void test_board()
+{
     TEST_ASSERT_EQUAL(26, board.pins.A0);
 }
 
-void setup() {
+void setup()
+{
     delay(2000);
 
     UNITY_BEGIN();
@@ -29,7 +32,8 @@ void setup() {
     UNITY_END();
 }
 
-void loop() {
+void loop()
+{
     // nothing to be done here.
 }
 
