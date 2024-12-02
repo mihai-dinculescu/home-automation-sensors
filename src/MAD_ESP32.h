@@ -18,7 +18,7 @@ struct Pins
 class Board
 {
 public:
-    const Pins pins;
+    static const Pins pins;
     WiFiClient wifi_client;
     bool SetupWifi(const char *ssid, const char *password);
     bool SetupTime();

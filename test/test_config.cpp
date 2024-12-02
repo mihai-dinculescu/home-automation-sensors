@@ -12,7 +12,7 @@
 void test_config()
 {
     TEST_ASSERT_EQUAL("192.168.1.211", config.mqtt_broker);
-    TEST_ASSERT_EQUAL(21, *config.sd_chip_select);
+    TEST_ASSERT_EQUAL(21, config.sd_chip_select);
 }
 
 void test_board()

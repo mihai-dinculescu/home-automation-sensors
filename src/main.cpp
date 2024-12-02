@@ -9,14 +9,6 @@
 #include "storage.h"
 #include "sensor_bsec.h"
 
-#ifdef CAPABILITIES_CONFIG_REMOTE
-#include "config_remote.h"
-#endif
-
-#ifdef CAPABILITIES_MOISTURE_SENSOR
-#include "sensor_soil_catnip.h"
-#endif
-
 bool SetWarningLed(uint16_t pin_address, bool show_warning, bool quiet_hours)
 {
     pinMode(pin_address, OUTPUT);
@@ -51,7 +43,7 @@ void LogErrorAndSleep(const char *message)
     board.DeepSleep(10);
 }
 
-const char *GenerateMessage(uint16_t plant_moisture)
+const char *GenerateMessage()
 {
     std::ostringstream messageStream;
 
@@ -65,10 +57,6 @@ const char *GenerateMessage(uint16_t plant_moisture)
     messageStream << ",\"static_iaq\":" << sensor_bsec.getStaticIaq();
     messageStream << ",\"bvoc_equivalent\":" << sensor_bsec.getBreathVocEquivalent();
     messageStream << ",\"co2_equivalent\":" << sensor_bsec.getCo2Equivalent();
-
-#ifdef CAPABILITIES_MOISTURE_SENSOR
-    messageStream << ",\"plant_moisture\":" << plant_moisture;
-#endif
 
     messageStream << "}";
 
@@ -95,19 +83,12 @@ void setup()
         LogErrorAndSleep("Time fetch timeout.");
     }
 
-    sensor_bsec.Setup();
-    messaging.Setup(config.mqtt_broker);
+    if (!sensor_bsec.Setup())
+    {
+        HandleFatalError("BSEC init failed.");
+    }
 
-#ifdef CAPABILITIES_MOISTURE_SENSOR
-    if (sensor_soil_catnip.Setup())
-    {
-        LOGLNT("Catnip Soil init done.");
-    }
-    else
-    {
-        LogErrorAndSleep("Catnip Soil init failed!");
-    }
-#endif
+    messaging.Setup(config.mqtt_broker);
 }
 
 void loop()
@@ -130,27 +111,6 @@ void loop()
             hold_pins = true;
         }
 
-#ifdef CAPABILITIES_CONFIG_REMOTE
-#endif
-
-        uint16_t plant_moisture = 0;
-
-#ifdef CAPABILITIES_MOISTURE_SENSOR
-        plant_moisture = sensor_soil_catnip.Read();
-        LOGLNT("Plant moisture (Catnip) %d", plant_moisture);
-#endif
-
-#if defined(CAPABILITIES_CONFIG_REMOTE) && defined(CAPABILITIES_MOISTURE_SENSOR)
-        config_remote.Read(config.config_url);
-
-        LOGLNT("Plant moisture threshold %d", config_remote.GetField1());
-
-        if (SetWarningLed(*config.moisture_warning_pin, plant_moisture <= config_remote.GetField1(), quiet_hours))
-        {
-            hold_pins = true;
-        }
-#endif
-
         if (hold_pins)
         {
             gpio_deep_sleep_hold_en();
@@ -164,7 +124,7 @@ void loop()
 
         if (messaging.Connect(config.mqtt_client_id))
         {
-            const char *message = GenerateMessage(plant_moisture);
+            const char *message = GenerateMessage();
 
             if (!messaging.Publish(config.mqtt_topic, message))
             {

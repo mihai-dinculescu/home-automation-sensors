@@ -4,19 +4,6 @@
 
 #include "sensor_bsec.h"
 
-/* Configure the BSEC library with information about the sensor
-    18v/33v = Voltage at Vdd. 1.8V or 3.3V
-    3s/300s = BSEC operating mode, BSEC_SAMPLE_RATE_LP or BSEC_SAMPLE_RATE_ULP
-    4d/28d = Operating age of the sensor in days
-    generic_18v_3s_4d
-    generic_18v_3s_28d
-    generic_18v_300s_4d
-    generic_18v_300s_28d
-    generic_33v_3s_4d
-    generic_33v_3s_28d
-    generic_33v_300s_4d
-    generic_33v_300s_28d
-*/
 const uint8_t _bsec_config_iaq[] = {
 #include "config/bme680/bme680_iaq_33v_300s_28d/bsec_iaq.txt"
 };
@@ -51,25 +38,7 @@ bool SensorBsec::CheckSensor()
     return true;
 }
 
-#ifdef BSEC_DUMP_STATE
-void SensorBsec::DumpState(const char *name, const uint8_t *state)
-{
-    LOGLNT("%s:", name);
-
-    for (int i = 0; i < BSEC_MAX_STATE_BLOB_SIZE; i++)
-    {
-        LOG("%02x ", state[i]);
-        if (i % 16 == 15)
-        {
-            LOG("\n");
-        }
-    }
-
-    LOG("\n");
-}
-#endif
-
-void SensorBsec::Setup()
+bool SensorBsec::Setup()
 {
     Wire.begin(board.pins.I2C_SDA, board.pins.I2C_SCL);
 
@@ -77,7 +46,7 @@ void SensorBsec::Setup()
     if (!CheckSensor())
     {
         LOGLNT("Failed to init BME680, check wiring!");
-        board.FatalError();
+        return false;
     }
     LOGLNT("BSEC version %d.%d.%d.%d.", _sensor.version.major, _sensor.version.minor, _sensor.version.major_bugfix, _sensor.version.minor_bugfix);
 
@@ -86,19 +55,17 @@ void SensorBsec::Setup()
     if (!CheckSensor())
     {
         LOGLNT("Invalid BSEC config!");
-        board.FatalError();
+        return false;
     }
 
     if (_sensor_state_time)
     {
-#ifdef BSEC_DUMP_STATE
-        DumpState("retrieveState", _sensor_state);
-#endif
         _sensor.setState(_sensor_state);
 
         if (!CheckSensor())
         {
-            board.FatalError();
+            LOGLNT("Invalid BSEC data after set state from RTC!");
+            return false;
         }
         else
         {
@@ -107,30 +74,29 @@ void SensorBsec::Setup()
     }
     else
     {
-        LOGLNT("Saved state missing!");
+        LOGLNT("Saved state missing in RTC.");
 
         if (storage.ConfigRead(BSEC_MAX_STATE_BLOB_SIZE, _sensor_state))
         {
-#ifdef BSEC_DUMP_STATE
-            DumpState("retrieveStateSD", _sensor_state);
-#endif
             _sensor.setState(_sensor_state);
 
             if (!CheckSensor())
             {
                 storage.ConfigDelete();
-                storage.LogError("Invalid BSEC data. Deleted.");
+                const char *message = "Invalid BSEC data after set state from SD! Deleted.";
+                LOGLNT("%s", message);
+                storage.LogError(message);
 
                 board.DeepSleep(10);
             }
             else
             {
-                LOGLNT("Successfully set state from file.");
+                LOGLNT("Successfully set state from SD.");
             }
         }
         else
         {
-            LOGLNT("Saved state SD missing!");
+            LOGLNT("Saved state missing in SD.");
         }
     }
 
@@ -151,21 +117,20 @@ void SensorBsec::Setup()
     if (!CheckSensor())
     {
         LOGLNT("Failed to update subscription!");
-        board.FatalError();
+        return false;
     }
 
     LOGLNT("BSEC sensor init done.");
+
+    return true;
 }
 
-void SensorBsec::SaveState()
+bool SensorBsec::SaveState()
 {
     _sensor_state_time = board.GetTimestamp();
     _sensor.getState(_sensor_state);
 
-#ifdef BSEC_DUMP_STATE
-    DumpState("saveState", _sensor_state);
-#endif
-    LOGLNT("Saved state to RTC memory at %lld", _sensor_state_time);
+    LOGLNT("Saved state to RTC memory at %lld.", _sensor_state_time);
 
     storage.ConfigWrite(BSEC_MAX_STATE_BLOB_SIZE, _sensor_state);
     LOGLNT("Saved state to file.");
@@ -173,8 +138,10 @@ void SensorBsec::SaveState()
     if (!CheckSensor())
     {
         LOGLNT("Invalid BSEC config after save state!");
-        board.FatalError();
+        return false;
     }
+
+    return true;
 }
 
 bool SensorBsec::Run(int64_t timeMilliseconds)
@@ -188,53 +155,54 @@ bool SensorBsec::Run(int64_t timeMilliseconds)
             return false;
         }
 
-        Serial.println("BSEC outputs:\n\tTime stamp = " + String((int)(outputs->output[0].time_stamp / INT64_C(1000000))));
+        LOGLNT("BSEC outputs:");
+        LOGLNT("\t\tTime stamp = %d", (int)(outputs->output[0].time_stamp / INT64_C(1000000)));
         for (uint8_t i = 0; i < outputs->nOutputs; i++)
         {
             const bsecData output = outputs->output[i];
             switch (output.sensor_id)
             {
             case BSEC_OUTPUT_RAW_TEMPERATURE:
-                Serial.println("\tTemperature = " + String(output.signal));
+                LOGLNT("\t\tTemperature = %f", output.signal);
                 _raw_temperature = output.signal;
                 break;
             case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
-                Serial.println("\tCompensated temperature = " + String(output.signal));
+                LOGLNT("\t\tCompensated temperature = %f", output.signal);
                 _temperature = output.signal;
                 break;
             case BSEC_OUTPUT_RAW_HUMIDITY:
-                Serial.println("\tHumidity = " + String(output.signal));
+                LOGLNT("\t\tHumidity = %f", output.signal);
                 _raw_humidity = output.signal;
                 break;
             case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
-                Serial.println("\tCompensated humidity = " + String(output.signal));
+                LOGLNT("\t\tCompensated humidity = %f", output.signal);
                 _humidity = output.signal;
                 break;
             case BSEC_OUTPUT_RAW_PRESSURE:
-                Serial.println("\tPressure = " + String(output.signal));
+                LOGLNT("\t\tPressure = %f", output.signal);
                 _raw_pressure = output.signal;
                 break;
             case BSEC_OUTPUT_IAQ:
-                Serial.println("\tIAQ = " + String(output.signal));
-                Serial.println("\tIAQ accuracy = " + String((int)output.accuracy));
+                LOGLNT("\t\tIAQ = %f", output.signal);
+                LOGLNT("\t\tIAQ accuracy = %d", (int)output.accuracy);
                 _iaq = output.signal;
                 _iaq_accuracy = output.accuracy;
                 break;
             case BSEC_OUTPUT_STATIC_IAQ:
-                Serial.println("\tStatic IAQ = " + String(output.signal));
-                Serial.println("\tStatic IAQ accuracy = " + String((int)output.accuracy));
+                LOGLNT("\t\tStatic IAQ = %f", output.signal);
+                LOGLNT("\t\tStatic IAQ accuracy = %d", (int)output.accuracy);
                 _static_iaq = output.signal;
                 _static_iaq_accuracy = output.accuracy;
                 break;
             case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
-                Serial.println("\tbVOC equivalent = " + String(output.signal));
-                Serial.println("\tbVOC accuracy = " + String((int)output.accuracy));
+                LOGLNT("\t\tbVOC equivalent = %f", output.signal);
+                LOGLNT("\t\tbVOC accuracy = %d", (int)output.accuracy);
                 _breath_voc_equivalent = output.signal;
                 _breath_voc_accuracy = output.accuracy;
                 break;
             case BSEC_OUTPUT_CO2_EQUIVALENT:
-                Serial.println("\tCO2 Equivalent = " + String(output.signal));
-                Serial.println("\tCO2 accuracy = " + String((int)output.accuracy));
+                LOGLNT("\t\tCO2 equivalent = %f", output.signal);
+                LOGLNT("\t\tCO2 accuracy = %d", (int)output.accuracy);
                 _co2_equivalent = output.signal;
                 _co2_accuracy = output.accuracy;
                 break;

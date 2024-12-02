@@ -12,11 +12,11 @@ class Storage
 
 public:
     void Setup();
-    void End();
     void LogError(const char *message);
     void ConfigWrite(const uint16_t len, const uint8_t *state);
     bool ConfigRead(const uint16_t len, uint8_t *state);
     void ConfigDelete();
+    void End();
 };
 
 extern Storage storage;

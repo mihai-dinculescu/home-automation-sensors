@@ -22,12 +22,11 @@ void Storage::Setup()
 {
     LOGLNT("Initializing SD Card...");
 
-    pinMode(*config.sd_chip_select, OUTPUT);
-
-    digitalWrite(*config.sd_chip_select, HIGH);
+    pinMode(config.sd_chip_select, OUTPUT);
+    digitalWrite(config.sd_chip_select, HIGH);
 
     uint64_t time_ms = millis();
-    while (!SD.begin(*config.sd_chip_select))
+    while (!SD.begin(config.sd_chip_select))
     {
         if (millis() >= time_ms + 10 * 1000)
         {
@@ -39,12 +38,22 @@ void Storage::Setup()
 
     if (!SD.exists(logs_folder))
     {
-        SD.mkdir(logs_folder);
+        bool result = SD.mkdir(logs_folder);
+        if (!result)
+        {
+            LOGLNT("Failed to create logs folder!");
+            HandleStorageError();
+        }
     }
 
     if (!SD.exists(data_folder))
     {
-        SD.mkdir(data_folder);
+        bool result = SD.mkdir(data_folder);
+        if (!result)
+        {
+            LOGLNT("Failed to create data folder!");
+            HandleStorageError();
+        }
     }
 
     if (SD.exists(errors_file))
@@ -66,11 +75,6 @@ void Storage::Setup()
     }
 
     LOGLNT("SD Card initialization DONE.");
-}
-
-void Storage::End()
-{
-    SD.end();
 }
 
 void Storage::LogError(const char *message)
@@ -160,4 +164,9 @@ void Storage::ConfigDelete()
     }
 
     SD.remove(data_file);
+}
+
+void Storage::End()
+{
+    SD.end();
 }

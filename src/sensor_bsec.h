@@ -25,8 +25,8 @@ class SensorBsec
     void DumpState(const char *name, const uint8_t *state);
 
 public:
-    void Setup();
-    void SaveState();
+    bool Setup();
+    bool SaveState();
 
     bool Run(int64_t timeMilliseconds = -1);
 
