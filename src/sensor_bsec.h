@@ -1,11 +1,11 @@
 #ifndef SENSOR_BSEC_H
 #define SENSOR_BSEC_H
 
-#include <bsec2.h>
+#include "bsec2_ext.h"
 
 class SensorBsec
 {
-    Bsec2 _sensor;
+    Bsec2Ext _sensor;
 
     float _raw_temperature;
     float _temperature;
