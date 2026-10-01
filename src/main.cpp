@@ -106,7 +106,7 @@ void loop()
 
         bool hold_pins = false;
 
-        if (SetWarningLed(*config.iaq_warning_pin, sensor_bsec.getIaq() >= config.iaq_warning_threshold, quiet_hours))
+        if (SetWarningLed(config.iaq_warning_pin, sensor_bsec.getIaq() >= config.iaq_warning_threshold, quiet_hours))
         {
             hold_pins = true;
         }

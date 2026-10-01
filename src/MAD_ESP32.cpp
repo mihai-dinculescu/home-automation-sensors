@@ -2,6 +2,8 @@
 
 #include "MAD_ESP32.h"
 
+const Pins Board::pins = Pins();
+
 int64_t Board::GetTimestamp()
 {
     struct timeval tv;
