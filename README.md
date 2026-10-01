@@ -2,7 +2,8 @@
 
 # Configuration
 
-Rename and update `config_secrets_sample.h` to `config_secrets.h`.
+- Copy `config.h.sample` to `config.h` and update it.
+- Copy `config_secrets.h.sample` to `config_secrets.h` and update it.
 
 # Setup
 
